@@ -1,0 +1,11 @@
+If:
+  PathMatch: [.*/external/.*]
+Index:
+  Background: Skip
+Diagnostics:
+  Suppress: "*"
+  ClangTidy:
+    Remove: "*"
+---
+SemanticTokens:
+  DisabledKinds: [Operator]
