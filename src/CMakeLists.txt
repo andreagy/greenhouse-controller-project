@@ -1,4 +1,4 @@
-add_executable(${ProjectName}
+add_executable(${PROJECT_NAME}
         main.cpp
         critical_section.cpp
         Fmutex.cpp
@@ -6,8 +6,8 @@ add_executable(${ProjectName}
         blinker.cpp
         blinker.h
 
-#        ipstack/IPStack.cpp
-#        ipstack/IPStack.h
+        # ipstack/IPStack.cpp
+        # ipstack/IPStack.h
         ipstack/lwipopts.h
         ipstack/tls_common.c
         ipstack/picow_tls_client.c
@@ -30,14 +30,15 @@ add_executable(${ProjectName}
         display/framebuf.h
         display/mono_vlsb.cpp
         display/mono_vlsb.h
-#        display/ssd1306.cpp
-#        display/ssd1306.h
+
+        # display/ssd1306.cpp
+        # display/ssd1306.h
         display/ssd1306os.h
         display/ssd1306os.cpp
 )
 
-target_include_directories(${ProjectName} PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
         modbus
         uart
         i2c
@@ -45,23 +46,23 @@ target_include_directories(${ProjectName} PRIVATE
         ipstack
 )
 
-target_compile_definitions(${ProjectName} PRIVATE
-#        WIFI_SSID=\"${WIFI_SSID}\"
-#        WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+
+        # WIFI_SSID=\"${WIFI_SSID}\"
+        # WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
         WIFI_SSID=\"SmartIotMQTT\"
         WIFI_PASSWORD=\"SmartIot\"
-        NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
+        NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND
 )
 
-target_link_libraries(${ProjectName} 
+target_link_libraries(${PROJECT_NAME}
         pico_stdlib
         hardware_i2c
         FreeRTOS-Kernel-Heap4
         pico_cyw43_arch_lwip_sys_freertos
         pico_lwip_mbedtls
         pico_mbedtls
-
 )
 
 # Ignore warnings from lwip code
@@ -71,7 +72,7 @@ set_source_files_properties(
         COMPILE_OPTIONS "-Wno-unused-result"
 )
 
-pico_add_extra_outputs(${ProjectName})
+pico_add_extra_outputs(${PROJECT_NAME})
 
 # Disable usb output, enable uart output
 pico_enable_stdio_usb(${PROJECT_NAME} 0)
