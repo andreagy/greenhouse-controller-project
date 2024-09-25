@@ -1,40 +1,37 @@
 add_executable(${PROJECT_NAME}
         main.cpp
         critical_section.cpp
-        Fmutex.cpp
-        Fmutex.h
-        blinker.cpp
-        blinker.h
 
-        # ipstack/IPStack.cpp
-        # ipstack/IPStack.h
-        ipstack/lwipopts.h
+        # Fmutex.cpp
+        # blinker.cpp
+        ipstack/IPStack.cpp
         ipstack/tls_common.c
         ipstack/picow_tls_client.c
-        ipstack/lwipopts_tls.h
 
         i2c/PicoI2C.cpp
-        i2c/PicoI2C.h
 
         uart/PicoOsUart.cpp
-        uart/PicoOsUart.h
 
-        modbus/nanomodbus.h
         modbus/nanomodbus.c
         modbus/ModbusRegister.cpp
-        modbus/ModbusRegister.h
         modbus/ModbusClient.cpp
-        modbus/ModbusClient.h
 
         display/framebuf.cpp
-        display/framebuf.h
         display/mono_vlsb.cpp
-        display/mono_vlsb.h
 
         # display/ssd1306.cpp
-        # display/ssd1306.h
-        display/ssd1306os.h
         display/ssd1306os.cpp
+
+        task/BaseTask.cpp
+        task/EncoderTask.cpp
+
+        sensor/GMP252.cpp
+        sensor/HMP60.cpp
+        sensor/SDP600.cpp
+
+        fan/MIO12V.cpp
+
+        # storage/Eeprom.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
