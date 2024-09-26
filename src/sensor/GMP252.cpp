@@ -1,36 +1,48 @@
 #include "GMP252.hpp"
 
-#include "pico/time.h"
+#include "Register32bit.hpp"
+#include "projdefs.h"
+
+#include <cstdint>
 
 namespace Sensor
 {
 
-GMP252::GMP252(std::shared_ptr<ModbusClient> modbus) :
-    mCO2{0},
-    mTemperature{0},
-    mCO2RegisterLow{modbus, mModbusAddress, CO2_REGISTER_LOW},
-    mCO2RegisterHigh{modbus, mModbusAddress, CO2_REGISTER_HIGH},
-    mTemperatureRegisterLow{modbus, mModbusAddress, TEMPERATURE_REGISTER_LOW},
-    mTemperatureRegisterHigh{modbus, mModbusAddress, TEMPERATURE_REGISTER_HIGH}
+constexpr int MODBUS_ADDR = 240;
+constexpr int CO2_REG_ADDR = 0x0000;
+constexpr int TEMP_REG_ADDR = 0x0004;
+
+GMP252::GMP252(std::shared_ptr<Modbus::Client> modbus) :
+    m_Co2Register(modbus, MODBUS_ADDR, CO2_REG_ADDR),
+    m_TempRegister(modbus, MODBUS_ADDR, TEMP_REG_ADDR)
+
 {}
 
 // Returns CO2 value in PPM.
-float GMP252::getCO2() { return mCO2.f; }
+float GMP252::getCO2() { return m_Co2; }
 
 // Returns temperature value in C.
-float GMP252::getTemperature() { return mTemperature.f; }
+float GMP252::getTemperature() { return m_Temp; }
 
 // Update sensor values.
 void GMP252::update()
 {
-    mCO2.u = mCO2RegisterLow.read();
-    sleep_ms(5);
-    mCO2.u |= (mCO2RegisterHigh.read() << 16);
-    sleep_ms(5);
-    mTemperature.u = mTemperatureRegisterLow.read();
-    sleep_ms(5);
-    mTemperature.u |= (mTemperatureRegisterHigh.read() << 16);
-    sleep_ms(5);
+    constexpr uint8_t QUANTITY = 2;
+    constexpr uint8_t FIRST = 0;
+    constexpr uint8_t SECOND = 1;
+
+    uint16_t values[QUANTITY] = {0};
+    Register32bit converter = {0};
+
+    m_Co2Register.read(values, QUANTITY);
+    converter.u = values[FIRST] | values[SECOND];
+    m_Co2 = converter.f;
+    vTaskDelay(pdMS_TO_TICKS(5)); // TODO: figure better delay system
+
+    m_TempRegister.read(values, QUANTITY);
+    converter.u = values[FIRST] | values[SECOND];
+    m_Temp = converter.f;
+    vTaskDelay(pdMS_TO_TICKS(5));
 }
 
 } // namespace Sensor

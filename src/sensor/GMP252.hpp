@@ -1,40 +1,29 @@
 #ifndef GMP252_HPP
 #define GMP252_HPP
 
-#include "ModbusClient.h"
-#include "ModbusRegister.h"
-#include "Register32bit.hpp"
+#include "modbus/Client.hpp"
+#include "modbus/Register.hpp"
+#include "sensor/BaseSensor.hpp"
 
 #include <memory>
 
 namespace Sensor
 {
 
-class GMP252
+class GMP252 : public BaseSensor
 {
-  private:
-    const int mModbusAddress = 240;
-    Register32bit mCO2;
-    Register32bit mTemperature;
-    ModbusRegister mCO2RegisterLow;
-    ModbusRegister mCO2RegisterHigh;
-    ModbusRegister mTemperatureRegisterLow;
-    ModbusRegister mTemperatureRegisterHigh;
-
-    enum modbusRegisterAddress
-    {
-        CO2_REGISTER_LOW = 0x0000,
-        CO2_REGISTER_HIGH,
-        TEMPERATURE_REGISTER_LOW = 0x0004,
-        TEMPERATURE_REGISTER_HIGH
-    };
-
   public:
-    GMP252(std::shared_ptr<ModbusClient> modbus);
+    GMP252(std::shared_ptr<Modbus::Client> modbus);
     GMP252(const GMP252 &) = delete;
     float getCO2();
     float getTemperature();
     void update();
+
+  private:
+    float m_Co2;
+    float m_Temp;
+    Modbus::Register m_Co2Register;
+    Modbus::Register m_TempRegister;
 };
 } // namespace Sensor
 
