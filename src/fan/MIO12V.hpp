@@ -1,30 +1,31 @@
 #ifndef MIO12V_HPP
 #define MIO12V_HPP
 
-#include "ModbusClient.h"
-#include "ModbusRegister.h"
+#include "modbus/Client.hpp"
+#include "modbus/Register.hpp"
+#include "task/BaseTask.hpp"
 
 #include <memory>
 
 namespace Fan
 {
 
-class MIO12V
+class MIO12V : public Task::BaseTask
 {
-  private:
-    const int mModbusAddress = 1;
-    const int mFanSpeedRegisterAddress = 0x0000;
-    const int mFanRotationRegisterAddress = 0x0004;
-    uint16_t mFanSpeed;
-    ModbusRegister mFanSpeedRegister;
-    ModbusRegister mFanRotationRegister;
-
   public:
-    MIO12V(std::shared_ptr<ModbusClient> modbus);
+    MIO12V(std::shared_ptr<Modbus::Client> modbus,
+           uint32_t stackDepth = 256,
+           Task::priority taskPriority = Task::MED);
     MIO12V(const MIO12V &) = delete;
     uint16_t getFanRotation();
     uint16_t getFanSpeed();
     void setFanSpeed(int speed);
+    void run();
+
+  private:
+    uint16_t m_FanSpeed;
+    Modbus::Register m_FanSpeedRegister;
+    Modbus::Register m_FanRotationRegister;
 };
 
 } // namespace Fan
