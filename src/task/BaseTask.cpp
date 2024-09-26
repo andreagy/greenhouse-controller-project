@@ -3,8 +3,6 @@
 namespace Task
 {
 
-static void runner(void *params);
-
 BaseTask::BaseTask(const std::string name,
                    uint32_t stackDepth,
                    void *const thisPtr,

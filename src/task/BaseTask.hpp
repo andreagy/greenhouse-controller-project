@@ -31,6 +31,7 @@ class BaseTask
 
   private:
     const std::string m_Name;
+    static void runner(void *params);
 };
 
 } // namespace Task
