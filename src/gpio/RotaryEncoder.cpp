@@ -1,15 +1,17 @@
-#include "EncoderTask.hpp"
+#include "RotaryEncoder.hpp"
 
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
 
 #include <cstdio>
 
-namespace Task
+namespace GPIO
 {
 
-EncoderTask::EncoderTask(QueueHandle_t queue, uint32_t stackDepth, Task::priority taskPriority) :
-    Task::BaseTask("EncoderTask", stackDepth, this, taskPriority)
+RotaryEncoder::RotaryEncoder(QueueHandle_t queue,
+                             uint32_t stackDepth,
+                             Task::priority taskPriority) :
+    Task::BaseTask("RotaryEncoder", stackDepth, this, taskPriority)
 {
     constexpr uint ROTARY_BIT_MASK = 7 << 10; // TODO: take as parameter?
     queueHandle = queue;
@@ -20,24 +22,24 @@ EncoderTask::EncoderTask(QueueHandle_t queue, uint32_t stackDepth, Task::priorit
     gpio_set_irq_enabled_with_callback(ROT_SW, GPIO_IRQ_EDGE_RISE, true, callback);
 }
 
-void EncoderTask::run()
+void RotaryEncoder::run()
 {
     while (true) { vTaskDelay(portMAX_DELAY); }
 }
 
 static void callback(uint gpio, uint32_t event_mask)
 {
-    Task::encoderPin command = Task::ROT_SW;
+    encoderPin command = ROT_SW;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    if (gpio == Task::ROT_A)
+    if (gpio == ROT_A)
     {
-        command = Task::ROT_A;
-        if (gpio_get(Task::ROT_B)) { command = Task::ROT_B; }
+        command = ROT_A;
+        if (gpio_get(ROT_B)) { command = ROT_B; }
     }
 
-    xQueueSendToBackFromISR(EncoderTask::queueHandle, &command, &xHigherPriorityTaskWoken);
+    xQueueSendToBackFromISR(RotaryEncoder::queueHandle, &command, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-} // namespace Task
+} // namespace GPIO
