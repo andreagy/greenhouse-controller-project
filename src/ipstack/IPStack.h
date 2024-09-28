@@ -7,11 +7,8 @@
 
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
-#include "pico/cyw43_arch.h"
-#include "pico/stdlib.h"
 
 #include <cstdint>
-#include <memory>
 
 class IPStack
 {
