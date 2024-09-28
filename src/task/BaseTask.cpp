@@ -12,7 +12,7 @@ BaseTask::BaseTask(const std::string name,
     xTaskCreate(runner, m_Name.c_str(), stackDepth, thisPtr, tskIDLE_PRIORITY + taskPriority, NULL);
 }
 
-static void runner(void *params)
+void BaseTask::runner(void *params)
 {
     BaseTask *task = static_cast<BaseTask *>(params);
     task->run();
