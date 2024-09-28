@@ -12,17 +12,17 @@ constexpr int MODBUS_ADDR = 240;
 constexpr int CO2_REG_ADDR = 0x0000;
 constexpr int TEMP_REG_ADDR = 0x0004;
 
-GMP252::GMP252(std::shared_ptr<Modbus::Client> modbus) :
-    m_Co2Register(modbus, MODBUS_ADDR, CO2_REG_ADDR),
-    m_TempRegister(modbus, MODBUS_ADDR, TEMP_REG_ADDR)
+GMP252::GMP252(std::shared_ptr<Modbus::Client> modbusClient) :
+    m_Co2Register(modbusClient, MODBUS_ADDR, CO2_REG_ADDR),
+    m_TempRegister(modbusClient, MODBUS_ADDR, TEMP_REG_ADDR)
 
 {}
 
 // Returns CO2 value in PPM.
-float GMP252::getCO2() { return m_Co2; }
+float GMP252::getCo2() { return m_Co2; }
 
 // Returns temperature value in C.
-float GMP252::getTemperature() { return m_Temp; }
+float GMP252::getTemp() { return m_Temp; }
 
 // Update sensor values.
 void GMP252::update()

@@ -13,11 +13,11 @@ namespace Sensor
 class GMP252 : public BaseSensor
 {
   public:
-    GMP252(std::shared_ptr<Modbus::Client> modbus);
+    GMP252(std::shared_ptr<Modbus::Client> modbusClient);
     GMP252(const GMP252 &) = delete;
-    float getCO2();
-    float getTemperature();
-    void update();
+    float getCo2();
+    float getTemp();
+    void update() override;
 
   private:
     float m_Co2;
