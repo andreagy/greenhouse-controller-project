@@ -3,20 +3,21 @@
 
 #include "modbus/Client.hpp"
 #include "modbus/Register.hpp"
+#include "sensor/BaseSensor.hpp"
 
 #include <memory>
 
 namespace Sensor
 {
 
-class HMP60
+class HMP60 : public BaseSensor
 {
   public:
     HMP60(std::shared_ptr<Modbus::Client> modbus);
     HMP60(const HMP60 &) = delete;
     float getRh();
     float getTemp();
-    void update();
+    void update() override;
 
   private:
     float m_Rh;
