@@ -2,25 +2,35 @@
 // Created by Keijo Länsikunnas on 10.9.2024.
 //
 
-#ifndef RP2040_FREERTOS_IRQ_PICOI2C_H
-#define RP2040_FREERTOS_IRQ_PICOI2C_H
-#include "FreeRTOS.h"
+#ifndef PICOI2C_HPP
+#define PICOI2C_HPP
+#include "FreeRTOS.h" // IWYU pragma: keep
+#include "hardware/i2c.h"
+#include "semaphore/Mutex.hpp"
 #include "semphr.h"
 #include "task.h"
-#include "hardware/i2c.h"
-#include "Fmutex.h"
 
-class PicoI2C {
-public:
+namespace I2c
+{
+
+class PicoI2C
+{
+  public:
     explicit PicoI2C(uint bus_nr, uint speed = 100000);
+    PicoI2C(const PicoI2C &) = delete;
     uint write(uint8_t addr, const uint8_t *buffer, uint length);
     uint read(uint8_t addr, uint8_t *buffer, uint length);
-    uint transaction(uint8_t addr, const uint8_t *wbuffer, uint wlength, uint8_t *rbuffer, uint rlength);
-private:
+    uint transaction(uint8_t addr,
+                     const uint8_t *wbuffer,
+                     uint wlength,
+                     uint8_t *rbuffer,
+                     uint rlength);
+
+  private:
     i2c_inst *i2c;
     int irqn;
     TaskHandle_t task_to_notify;
-    Fmutex access;
+    Semaphore::Mutex access;
     const uint8_t *wbuf;
     uint wctr;
     uint8_t *rbuf;
@@ -36,5 +46,6 @@ private:
     static PicoI2C *i2c1_instance;
 };
 
+} // namespace I2c
 
-#endif //RP2040_FREERTOS_IRQ_PICOI2C_H
+#endif /* PICOI2C_HPP */
