@@ -21,21 +21,12 @@ float HMP60::getTemperature() { return m_Temp; }
 void HMP60::update()
 {
     constexpr uint8_t QUANTITY = 2;
-    constexpr uint8_t FIRST = 0;
-    constexpr uint8_t SECOND = 1;
-
     uint16_t values[QUANTITY] = {0};
-    Register32bit converter = {0};
 
     m_RhRegister.read(values, QUANTITY);
-    converter.u = values[FIRST] | (values[SECOND] << 16);
-    m_Rh = converter.f;
-    vTaskDelay(pdMS_TO_TICKS(5)); // TODO: figure better delay system
-
+    m_Rh = convertToFloat(values);
     m_TempRegister.read(values, QUANTITY);
-    converter.u = values[FIRST] | (values[SECOND] << 16);
-    m_Temp = converter.f;
-    vTaskDelay(pdMS_TO_TICKS(5));
+    m_Temp = convertToFloat(values);
 }
 
 } // namespace Sensor
