@@ -7,7 +7,9 @@ namespace Sensor
 class BaseSensor
 {
   public:
-    virtual void update();
+    BaseSensor(){};
+    virtual ~BaseSensor(){};
+    virtual void update() = 0;
 };
 
 } // namespace Sensor
