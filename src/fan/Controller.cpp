@@ -1,4 +1,4 @@
-#include "MIO12V.hpp"
+#include "Controller.hpp"
 
 #include "pico/time.h"
 #include "projdefs.h"
@@ -13,37 +13,30 @@ constexpr int MODBUS_ADDR = 1;
 constexpr int SPEED_REG_ADDR = 0x0000;
 constexpr int ROT_REG_ADDR = 0x0004;
 
-MIO12V::MIO12V(std::shared_ptr<Modbus::Client> modbus,
-               uint32_t stackDepth,
-               Task::priority taskPriority) :
+Controller::Controller(std::shared_ptr<Modbus::Client> modbus,
+                       uint32_t stackDepth,
+                       Task::priority taskPriority) :
     Task::BaseTask("FanController", stackDepth, this, taskPriority),
     m_FanSpeed{0},
     m_FanSpeedRegister{modbus, MODBUS_ADDR, SPEED_REG_ADDR},
     m_FanRotationRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false}
 {
     m_FanSpeed = m_FanSpeedRegister.read();
-    vTaskDelay(pdMS_TO_TICKS(5));
 }
 
-uint16_t MIO12V::getFanRotation()
-{
-    return m_FanRotationRegister.read();
-    vTaskDelay(pdMS_TO_TICKS(5));
-}
+uint16_t Controller::getFanRotation() { return m_FanRotationRegister.read(); }
 
-uint16_t MIO12V::getFanSpeed() { return m_FanSpeed; }
+uint16_t Controller::getFanSpeed() { return m_FanSpeed; }
 
-void MIO12V::setFanSpeed(int speed)
+void Controller::setFanSpeed(int speed)
 {
     if (speed < 0 || speed > 1000) { speed = speed < 1000 ? 0 : 1000; }
 
     m_FanSpeedRegister.write(speed);
-    vTaskDelay(pdMS_TO_TICKS(5));
     m_FanSpeed = m_FanSpeedRegister.read();
-    vTaskDelay(pdMS_TO_TICKS(5));
 }
 
-void MIO12V::run()
+void Controller::run()
 {
     uint16_t newSpeed = 0;
 

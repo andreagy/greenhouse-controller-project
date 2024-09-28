@@ -1,5 +1,5 @@
-#ifndef MIO12V_HPP
-#define MIO12V_HPP
+#ifndef CONTROLLER_HPP
+#define CONTROLLER_HPP
 
 #include "modbus/Client.hpp"
 #include "modbus/Register.hpp"
@@ -10,13 +10,13 @@
 namespace Fan
 {
 
-class MIO12V : public Task::BaseTask
+class Controller : public Task::BaseTask
 {
   public:
-    MIO12V(std::shared_ptr<Modbus::Client> modbus,
-           uint32_t stackDepth = 256,
-           Task::priority taskPriority = Task::MED);
-    MIO12V(const MIO12V &) = delete;
+    Controller(std::shared_ptr<Modbus::Client> modbus,
+               uint32_t stackDepth = 256,
+               Task::priority taskPriority = Task::MED);
+    Controller(const Controller &) = delete;
     uint16_t getFanRotation();
     uint16_t getFanSpeed();
     void setFanSpeed(int speed);
@@ -30,4 +30,4 @@ class MIO12V : public Task::BaseTask
 
 } // namespace Fan
 
-#endif /* MIO12V_HPP */
+#endif /* CONTROLLER_HPP */
