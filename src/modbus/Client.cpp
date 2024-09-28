@@ -9,7 +9,7 @@
 namespace Modbus
 {
 
-Client::Client(std::shared_ptr<PicoOsUart> uart_) : uart(uart_)
+Client::Client(std::shared_ptr<Uart::PicoOsUart> uart_) : uart(uart_)
 {
     platform_conf.transport = NMBS_TRANSPORT_RTU;
     platform_conf.read = uart_transport_read;
@@ -35,7 +35,7 @@ int32_t Client::uart_transport_read(uint8_t *buf,
                                     int32_t byte_timeout_ms,
                                     void *arg)
 {
-    auto uart = static_cast<PicoOsUart *>(arg);
+    auto uart = static_cast<Uart::PicoOsUart *>(arg);
     uint32_t timeout = byte_timeout_ms < 0 ? portMAX_DELAY : byte_timeout_ms;
     uint flv = uart->get_fifo_level();
     if (flv)
@@ -71,7 +71,7 @@ int32_t Client::uart_transport_write(const uint8_t *buf,
                                      int32_t byte_timeout_ms,
                                      void *arg)
 {
-    return static_cast<PicoOsUart *>(arg)->write(buf, count, byte_timeout_ms);
+    return static_cast<Uart::PicoOsUart *>(arg)->write(buf, count, byte_timeout_ms);
 }
 
 void Client::set_destination_rtu_address(uint8_t address)

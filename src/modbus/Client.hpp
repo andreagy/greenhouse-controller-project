@@ -5,8 +5,10 @@
 // Created by Keijo Länsikunnas on 14.2.2024.
 //
 
-#include "PicoOsUart.h"
-#include "nanomodbus.h"
+#include "FreeRTOS.h" // IWYU pragma: keep
+#include "nanomodbus/nanomodbus.h"
+#include "timer/Timeout.hpp"
+#include "uart/PicoOsUart.hpp"
 
 #include <memory>
 
@@ -18,7 +20,7 @@ namespace Modbus
 class Client
 {
   public:
-    explicit Client(std::shared_ptr<PicoOsUart> uart_);
+    explicit Client(std::shared_ptr<Uart::PicoOsUart> uart_);
     void set_destination_rtu_address(uint8_t address);
     nmbs_error read_coils(uint16_t address, uint16_t quantity, nmbs_bitfield coils_out);
     nmbs_error read_discrete_inputs(uint16_t address,
