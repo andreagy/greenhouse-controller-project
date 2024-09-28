@@ -14,9 +14,9 @@ HMP60::HMP60(std::shared_ptr<Modbus::Client> modbus) :
     m_TempRegister(modbus, MODBUS_ADDR, TEMP_REG_ADDR)
 {}
 
-float HMP60::getRelativeHumidity() { return m_Rh; };
+float HMP60::getRh() { return m_Rh; };
 
-float HMP60::getTemperature() { return m_Temp; }
+float HMP60::getTemp() { return m_Temp; }
 
 void HMP60::update()
 {

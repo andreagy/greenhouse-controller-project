@@ -14,8 +14,8 @@ class HMP60
   public:
     HMP60(std::shared_ptr<Modbus::Client> modbus);
     HMP60(const HMP60 &) = delete;
-    float getRelativeHumidity();
-    float getTemperature();
+    float getRh();
+    float getTemp();
     void update();
 
   private:
