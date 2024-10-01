@@ -12,8 +12,6 @@
 namespace Modbus
 {
 
-Timer::Timeout Client::s_RequestDelay{5};
-
 Client::Client(std::shared_ptr<Uart::PicoOsUart> uart_) : uart(uart_)
 {
     platform_conf.transport = NMBS_TRANSPORT_RTU;

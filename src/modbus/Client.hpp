@@ -54,7 +54,7 @@ class Client
     std::shared_ptr<Uart::PicoOsUart> uart;
     nmbs_platform_conf platform_conf;
     nmbs_t nmbs;
-    static Timer::Timeout s_RequestDelay;
+    inline static Timer::Timeout s_RequestDelay{5};
 };
 
 } // namespace Modbus
