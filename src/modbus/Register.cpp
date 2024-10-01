@@ -4,6 +4,10 @@
 
 #include "Register.hpp"
 
+#include "semaphore/Mutex.hpp"
+
+#include <mutex>
+
 namespace Modbus
 {
 
@@ -26,6 +30,8 @@ uint16_t Register::read()
 
 void Register::read(uint16_t *values, uint16_t quantity)
 {
+    std::lock_guard<Semaphore::Mutex> exclusive(s_Access);
+
     client->set_destination_rtu_address(server);
 
     if (hr) { client->read_holding_registers(reg_addr, quantity, values); }
@@ -40,6 +46,8 @@ void Register::read(std::vector<uint16_t> &values, uint16_t quantity)
 
 void Register::write(uint16_t value)
 {
+    std::lock_guard<Semaphore::Mutex> exclusive(s_Access);
+
     // only holding register is writable
     if (hr)
     {
@@ -52,6 +60,8 @@ void Register::write(uint16_t value)
 
 void Register::write(const uint16_t *values, uint16_t quantity)
 {
+    std::lock_guard<Semaphore::Mutex> exclusive(s_Access);
+
     // only holding register is writable
     if (hr)
     {

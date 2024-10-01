@@ -6,6 +6,7 @@
 #define REGISTER_HPP
 
 #include "Client.hpp"
+#include "semaphore/Mutex.hpp"
 
 #include <memory>
 #include <vector>
@@ -32,6 +33,7 @@ class Register
     int server;
     int reg_addr;
     bool hr;
+    inline static Semaphore::Mutex s_Access;
 };
 
 } // namespace Modbus
