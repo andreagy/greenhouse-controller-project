@@ -1,9 +1,8 @@
 #include "Controller.hpp"
 
-#include "pico/time.h"
-#include "projdefs.h"
-#include "task/BaseTask.hpp"
+#include "timers.h"
 
+#include <climits>
 #include <cstdint>
 
 namespace Fan
@@ -35,11 +34,11 @@ void Controller::setSpeed(uint16_t speed)
 
 void Controller::run()
 {
-    uint16_t newSpeed = 0;
+    uint32_t newSpeed = 0;
 
     while (true)
     {
-        // TODO: block on queue waiting for new fan speed setting
+        xTaskNotifyWait(0, ULONG_MAX, &newSpeed, portMAX_DELAY);
         setSpeed(static_cast<uint16_t>(newSpeed));
     }
 }
