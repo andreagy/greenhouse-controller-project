@@ -17,23 +17,20 @@ Controller::Controller(std::shared_ptr<Modbus::Client> modbus,
                        uint32_t stackDepth,
                        Task::priority taskPriority) :
     Task::BaseTask("FanController", stackDepth, this, taskPriority),
-    m_FanSpeed{0},
-    m_FanSpeedRegister{modbus, MODBUS_ADDR, SPEED_REG_ADDR},
-    m_FanRotationRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false}
-{
-    m_FanSpeed = m_FanSpeedRegister.read();
-}
+    m_SpeedRegister{modbus, MODBUS_ADDR, SPEED_REG_ADDR},
+    m_PulseRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false}
+{}
 
-uint16_t Controller::getFanRotation() { return m_FanRotationRegister.read(); }
+uint16_t Controller::getPulse() { return m_PulseRegister.read(); }
 
-uint16_t Controller::getFanSpeed() { return m_FanSpeed; }
+uint16_t Controller::getSpeed() { return m_Speed; }
 
 void Controller::setFanSpeed(int speed)
 {
     if (speed < 0 || speed > 1000) { speed = speed < 1000 ? 0 : 1000; }
 
-    m_FanSpeedRegister.write(speed);
-    m_FanSpeed = m_FanSpeedRegister.read();
+    m_SpeedRegister.write(speed);
+    m_Speed = m_SpeedRegister.read();
 }
 
 void Controller::run()

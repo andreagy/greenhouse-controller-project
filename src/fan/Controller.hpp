@@ -17,15 +17,15 @@ class Controller : public Task::BaseTask
                uint32_t stackDepth = 256,
                Task::priority taskPriority = Task::MED);
     Controller(const Controller &) = delete;
-    uint16_t getFanRotation();
-    uint16_t getFanSpeed();
+    uint16_t getPulse();
+    uint16_t getSpeed();
     void setFanSpeed(int speed);
     void run();
 
   private:
     uint16_t m_FanSpeed;
-    Modbus::Register m_FanSpeedRegister;
-    Modbus::Register m_FanRotationRegister;
+    Modbus::Register m_SpeedRegister;
+    Modbus::Register m_PulseRegister;
 };
 
 } // namespace Fan
