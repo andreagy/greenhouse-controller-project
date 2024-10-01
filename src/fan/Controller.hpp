@@ -23,7 +23,7 @@ class Controller : public Task::BaseTask
     void run();
 
   private:
-    uint16_t m_FanSpeed;
+    uint16_t m_Speed;
     Modbus::Register m_SpeedRegister;
     Modbus::Register m_PulseRegister;
 };
