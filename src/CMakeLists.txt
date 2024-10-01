@@ -6,8 +6,6 @@ add_executable(${PROJECT_NAME}
         display/mono_vlsb.cpp
         display/ssd1306os.cpp
 
-        fan/Controller.cpp
-
         gpio/RotaryEncoder.cpp
 
         i2c/PicoI2C.cpp
@@ -24,11 +22,12 @@ add_executable(${PROJECT_NAME}
 
         sensor/GMP252.cpp
         sensor/HMP60.cpp
-        sensor/Reader.cpp
         sensor/SDP600.cpp
 
         # storage/Eeprom.cpp
         task/BaseTask.cpp
+        task/co2/Co2Controller.cpp
+        task/fan/FanController.cpp
 
         timer/Timeout.cpp
 

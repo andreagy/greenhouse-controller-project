@@ -7,6 +7,8 @@
 
 #include <memory>
 
+// Implement as display updater
+
 namespace Sensor
 {
 

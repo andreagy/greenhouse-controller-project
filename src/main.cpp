@@ -1,14 +1,13 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
-#include "TestTask.hpp"
-#include "fan/Controller.hpp"
 #include "i2c/PicoI2C.hpp"
 #include "modbus/Client.hpp"
 #include "semphr.h"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
-#include "sensor/Reader.hpp"
 #include "sensor/SDP600.hpp"
 #include "task.h"
+#include "task/co2/Co2Controller.hpp"
+#include "task/fan/FanController.hpp"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -42,14 +41,9 @@ int main()
     auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
     // Create task objects
-    auto sensorReader = new Sensor::Reader();
-    auto fanController = new Fan::Controller(modbusClient);
-    auto tester = new TestTask(fanController->getHandle());
-
-    // Attach sensors to reader
-    sensorReader->attach(co2Sensor);
-    sensorReader->attach(rhSensor);
-    sensorReader->attach(paSensor);
+    auto fanController = new Task::Fan::Controller(modbusClient);
+    auto co2Controller = new Task::Co2::Controller(co2Sensor,
+                                                   fanController->getHandle());
 
     // Start scheduler
     vTaskStartScheduler();
@@ -57,9 +51,8 @@ int main()
     while (true) {};
 
     // Delete task objects
-    delete sensorReader;
     delete fanController;
-    delete tester;
+    delete co2Controller;
 
     return 0;
 }
