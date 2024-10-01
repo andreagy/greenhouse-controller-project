@@ -7,7 +7,7 @@
 
 #include <memory>
 
-// Implement as display updater
+// TODO: Implement as display updater
 
 namespace Sensor
 {
