@@ -71,6 +71,7 @@ void UI::handleInput()
             setCO2Level(co2Sensor.getCo2() - 10); // Decrement CO2 level
         } else if (command == GPIO::ROT_SW) {
             // TODO: handle button press (confirm setting)
+            xTaskNotify(co2ControllerHandle, *(uint32_t*)&m_Co2Target, eSetValueWithOverwrite); // TODO: implement in Co2Controller
             saveToEEPROM(); // TODO: implement saving when the button is pressed
         }
     }
@@ -83,8 +84,6 @@ void UI::setCO2Level(float level)
     if (level > 1500) level = 1500;
 
     m_Co2Target = level; // Set the target CO2 level
-
-    xTaskNotify(co2ControllerHandle, *(uint32_t*)&m_Co2Target, eSetValueWithOverwrite); // TODO: implement in Co2Controller
 }
 
 } // namespace LocalUI
