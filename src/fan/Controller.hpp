@@ -15,7 +15,7 @@ class Controller : public Task::BaseTask
   public:
     Controller(std::shared_ptr<Modbus::Client> modbus,
                uint32_t stackDepth = 256,
-               Task::priority taskPriority = Task::MED);
+               Task::priority taskPriority = Task::HIGH);
     Controller(const Controller &) = delete;
     uint16_t getPulse();
     uint16_t getSpeed();
