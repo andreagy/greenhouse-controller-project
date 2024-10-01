@@ -16,14 +16,14 @@ UI::UI(QueueHandle_t rotaryQueue,
        std::shared_ptr<Modbus::Client> modbusClient,
        TaskHandle_t co2ControllerHandle)
     : BaseTask{"LocalUI", 256, this, LOW},
-      m_RotaryEncoder(rotaryQueue, 256, LOW),
-      rotaryQueue(rotaryQueue),
-      m_Co2Target(900),
-      display(i2cBus), // Initialize the OLED display with I2C bus
-      tempRHSensor(modbusClient), // Initialize HMP60 temp sensor with Modbus client
-      pressureSensor(i2cBus),
-      co2Sensor(modbusClient),
-      co2ControllerHandle(co2ControllerHandle)
+      m_RotaryEncoder{rotaryQueue, 256, LOW},
+      rotaryQueue{rotaryQueue},
+      m_Co2Target{900},
+      display{i2cBus}, // Initialize the OLED display with I2C bus
+      tempRHSensor{modbusClient}, // Initialize HMP60 temp sensor with Modbus client
+      pressureSensor{i2cBus},
+      co2Sensor{modbusClient},
+      co2ControllerHandle{co2ControllerHandle}
 {
     readFromEEPROM(); // TODO: implement reading initial settings from EEPROM
     display.fill(0); // Clear the display
