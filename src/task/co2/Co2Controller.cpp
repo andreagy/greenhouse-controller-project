@@ -54,7 +54,7 @@ void Controller::run()
     uint16_t pollInterval = 250;
     uint32_t fanSpeed = 0;
 
-    setTarget(900);
+    // setTarget(900);
 
     while (true)
     {

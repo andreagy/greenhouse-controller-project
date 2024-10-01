@@ -42,8 +42,8 @@ int main()
 
     // Create task objects
     auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = new Task::Co2::Controller(co2Sensor,
-                                                   fanController->getHandle());
+    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor,
+                                                                 fanController->getHandle());
 
     // Start scheduler
     vTaskStartScheduler();
@@ -52,7 +52,6 @@ int main()
 
     // Delete task objects
     delete fanController;
-    delete co2Controller;
 
     return 0;
 }
