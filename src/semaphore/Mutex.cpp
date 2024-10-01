@@ -5,12 +5,7 @@ namespace Semaphore
 
 Mutex::Mutex() { m_Semaphore = xSemaphoreCreateMutex(); }
 
-Mutex::~Mutex()
-{
-    /* delete semaphore */
-    /* (not needed if object lifetime is known
-     * to be infinite) */
-}
+Mutex::~Mutex() { vSemaphoreDelete(m_Semaphore); }
 
 void Mutex::lock() { xSemaphoreTake(m_Semaphore, portMAX_DELAY); }
 

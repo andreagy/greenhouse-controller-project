@@ -10,7 +10,7 @@ class Mutex
 {
   public:
     Mutex();
-    virtual ~Mutex();
+    ~Mutex();
     void lock();
     bool try_lock();
     void unlock();

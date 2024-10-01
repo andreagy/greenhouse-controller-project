@@ -1,40 +1,29 @@
 #ifndef HMP60_HPP
 #define HMP60_HPP
 
-#include "ModbusClient.h"
-#include "ModbusRegister.h"
-#include "Register32bit.hpp"
+#include "modbus/Client.hpp"
+#include "modbus/Register.hpp"
+#include "sensor/BaseSensor.hpp"
 
 #include <memory>
 
 namespace Sensor
 {
 
-class HMP60
+class HMP60 : public BaseSensor
 {
-  private:
-    const int mModbusAddress = 241;
-    Register32bit mRelativeHumidity;
-    Register32bit mTemperature;
-    ModbusRegister mHumidityRegisterLow;
-    ModbusRegister mHumidityRegisterHigh;
-    ModbusRegister mTemperatureRegisterLow;
-    ModbusRegister mTemperatureRegisterHigh;
-
-    enum modbusRegisterAddress
-    {
-        RH_REGISTER_LOW = 0x0000,
-        RH_REGISTER_HIGH,
-        TEMPERATURE_REGISTER_LOW = 0x0002,
-        TEMPERATURE_REGISTER_HIGH
-    };
-
   public:
-    HMP60(std::shared_ptr<ModbusClient> modbus);
+    HMP60(std::shared_ptr<Modbus::Client> modbus);
     HMP60(const HMP60 &) = delete;
-    float getRelativeHumidity();
-    float getTemperature();
-    void update();
+    float getRh();
+    float getTemp();
+    void update() override;
+
+  private:
+    float m_Rh;
+    float m_Temp;
+    Modbus::Register m_RhRegister;
+    Modbus::Register m_TempRegister;
 };
 
 } // namespace Sensor

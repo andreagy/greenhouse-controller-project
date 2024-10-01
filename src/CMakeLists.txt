@@ -1,58 +1,65 @@
+# Source files
 add_executable(${PROJECT_NAME}
         main.cpp
-        critical_section.cpp
-
-        # Fmutex.cpp
-        # blinker.cpp
-        ipstack/IPStack.cpp
-        ipstack/tls_common.c
-        ipstack/picow_tls_client.c
-
-        i2c/PicoI2C.cpp
-
-        uart/PicoOsUart.cpp
-
-        modbus/nanomodbus.c
-        modbus/ModbusRegister.cpp
-        modbus/ModbusClient.cpp
 
         display/framebuf.cpp
         display/mono_vlsb.cpp
-
-        # display/ssd1306.cpp
         display/ssd1306os.cpp
 
-        task/BaseTask.cpp
-        task/EncoderTask.cpp
+        fan/Controller.cpp
+
+        gpio/RotaryEncoder.cpp
+
+        i2c/PicoI2C.cpp
+
+        ipstack/IPStack.cpp
+        ipstack/picow_tls_client.c
+        ipstack/tls_common.c
+
+        modbus/Client.cpp
+        modbus/Register.cpp
+
+        semaphore/Binary.cpp
+        semaphore/Mutex.cpp
 
         sensor/GMP252.cpp
         sensor/HMP60.cpp
+        sensor/Reader.cpp
         sensor/SDP600.cpp
 
-        fan/MIO12V.cpp
-
         # storage/Eeprom.cpp
+        task/BaseTask.cpp
+
+        timer/Timeout.cpp
+
+        uart/PicoOsUart.cpp
+
+        TestTask.cpp
 )
 
+# Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        modbus
-        uart
-        i2c
-        display
-        ipstack
+        config
 )
 
+# Compile definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-
-        # WIFI_SSID=\"${WIFI_SSID}\"
-        # WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-        WIFI_SSID=\"SmartIotMQTT\"
-        WIFI_PASSWORD=\"SmartIot\"
+        WIFI_SSID=\"$ENV{WIFI_SSID}\"
+        WIFI_PASSWORD=\"$ENV{WIFI_PASSWORD}\"
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND
 )
 
+# Compiler options
+target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wall
+        -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+        -Wno-unused-function # we have some for the docs that aren't called
+        -Wno-maybe-uninitialized
+)
+
+# Linked libraries
 target_link_libraries(${PROJECT_NAME}
         pico_stdlib
         hardware_i2c

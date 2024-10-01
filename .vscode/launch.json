@@ -2,53 +2,28 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Pico Debug (Windows)",
-      "cwd": "${userHome}/.pico-sdk/openocd/0.12.0+dev/scripts",
+      "name": "Pico Debug (Manjaro)",
+      "cwd": "${workspaceRoot}",
       "executable": "${command:cmake.launchTargetPath}",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
-      "serverpath": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd",
-      "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
-      "rtos": "auto",
-      "device": "${command:raspberry-pi-pico.getChipUppercase}",
-      "configFiles": [
-        "interface/cmsis-dap.cfg",
-        "target/${command:raspberry-pi-pico.getTarget}.cfg"
-      ],
-      "preLaunchTask": "Flash (Windows)",
-      "svdFile": "${userHome}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
+      "serverpath": "openocd",
+      "gdbPath": "arm-none-eabi-gdb",
+      "device": "RP2040",
+      "configFiles": ["interface/cmsis-dap.cfg", "target/rp2040.cfg"],
+      "preLaunchTask": "Flash",
+      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/RP2040.svd",
       "runToEntryPoint": "main",
-      // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
-      // Also works fine for flash binaries
-      "overrideLaunchCommands": ["monitor reset init"],
+      "overrideLaunchCommands": [
+        "monitor reset init",
+        "load ${command:cmake.launchTargetPath}"
+      ],
       "openOCDLaunchCommands": ["adapter speed 5000"]
     },
     {
-      "name": "Pico Debug (Linux)",
-      "cwd": "${userHome}/.pico-sdk/openocd/0.12.0+dev/scripts",
-      "executable": "${command:cmake.launchTargetPath}",
-      "request": "launch",
-      "type": "cortex-debug",
-      "servertype": "openocd",
-      "serverpath": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd",
-      "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
-      "rtos": "auto",
-      "device": "${command:raspberry-pi-pico.getChipUppercase}",
-      "configFiles": [
-        "interface/cmsis-dap.cfg",
-        "target/${command:raspberry-pi-pico.getTarget}.cfg"
-      ],
-      "preLaunchTask": "Flash (Linux)",
-      "svdFile": "${userHome}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
-      "runToEntryPoint": "main",
-      // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
-      // Also works fine for flash binaries
-      "overrideLaunchCommands": ["monitor reset init"],
-      "openOCDLaunchCommands": ["adapter speed 5000"]
-    },
-    {
-      "name": "Pico Debug (WSL)",
+      "name": "Pico Debug (Ubuntu)",
+      "cwd": "${workspaceRoot}",
       "executable": "${command:cmake.launchTargetPath}",
       "request": "launch",
       "type": "cortex-debug",
@@ -57,14 +32,14 @@
       "gdbPath": "gdb-multiarch",
       "rtos": "auto",
       "device": "RP2040",
-      "configFiles": [
-        "interface/cmsis-dap.cfg",
-        "target/rp2040.cfg"
-      ],
-      "preLaunchTask": "Flash (WSL)",
+      "configFiles": ["interface/cmsis-dap.cfg", "target/rp2040.cfg"],
+      "preLaunchTask": "Flash",
       "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/RP2040.svd",
       "runToEntryPoint": "main",
-      "overrideLaunchCommands": ["monitor reset init"],
+      "overrideLaunchCommands": [
+        "monitor reset init",
+        "load \"${command:cmake.launchTargetPath}\""
+      ],
       "openOCDLaunchCommands": ["adapter speed 5000"]
     }
   ]

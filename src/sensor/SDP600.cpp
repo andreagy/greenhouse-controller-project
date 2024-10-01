@@ -1,25 +1,29 @@
 #include "SDP600.hpp"
 
+#include <cstdint>
+#include <vector>
+
 namespace Sensor
 {
 
-SDP600::SDP600(i2c_inst *i2c, uint SDA_pin, uint SCL_pin, uint8_t devAddr) :
-    mSensor_i2c(i2c),
-    mDevAddr(devAddr)
-{
-    gpio_set_function(SDA_pin, GPIO_FUNC_I2C);
-    gpio_set_function(SCL_pin, GPIO_FUNC_I2C);
-    mPressure.mInt16 = 0;
-}
+constexpr uint8_t I2C_ADDR = 0x40;
+
+SDP600::SDP600(std::shared_ptr<I2c::PicoI2C> picoI2c) : m_I2c{picoI2c} {}
 
 void SDP600::update()
 {
-    uint8_t buf[2] = {0xF1};
-    i2c_write_blocking(mSensor_i2c, mDevAddr, buf, 1, true);
-    i2c_read_blocking(mSensor_i2c, mDevAddr, buf, 2, false);
-    mPressure.mUint16 = (buf[0] << 8) + (buf[1]);
+    constexpr uint WRITE_LEN = 1;
+    constexpr uint READ_LEN = 2;
+    std::vector<uint8_t> buffer = {0xF1, 0x00};
+
+    uint result = m_I2c->transaction(I2C_ADDR, buffer.data(), WRITE_LEN, buffer.data(), READ_LEN);
+
+    if (result == WRITE_LEN + READ_LEN)
+    {
+        m_Pressure = ((buffer[0] << 8) | buffer[1]) / 240;
+    }
 }
 
-int16_t SDP600::getPressure() const { return mPressure.mInt16; }
+int16_t SDP600::getPressure() { return m_Pressure; }
 
 } // namespace Sensor

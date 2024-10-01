@@ -1,30 +1,29 @@
-#ifndef PICO_MODBUS_SDP600_H
-#define PICO_MODBUS_SDP600_H
+#ifndef SDP600_HPP
+#define SDP600_HPP
 
+#include "i2c/PicoI2C.hpp"
+#include "sensor/BaseSensor.hpp"
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
+
+#include <cstdint>
+#include <memory>
 
 namespace Sensor
 {
 
-class SDP600
+class SDP600 : public BaseSensor
 {
-  private:
-    i2c_inst *mSensor_i2c;
-    uint8_t mDevAddr;
-
-    union
-    {
-        uint16_t mUint16;
-        int16_t mInt16;
-    } mPressure;
-
   public:
-    SDP600(i2c_inst *i2c = i2c1, uint SDA_pin = 14, uint SCL_pin = 15, uint8_t devAddr = 0x40);
-    void update();
-    int16_t getPressure() const;
+    explicit SDP600(std::shared_ptr<I2c::PicoI2C> picoI2c);
+    void update() override;
+    int16_t getPressure();
+
+  private:
+    int16_t m_Pressure = 0;
+    std::shared_ptr<I2c::PicoI2C> m_I2c;
 };
 
 } // namespace Sensor
 
-#endif // PICO_MODBUS_SDP600_H
+#endif /* SDP600_HPP */
