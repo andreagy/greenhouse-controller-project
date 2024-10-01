@@ -25,7 +25,7 @@ uint16_t Controller::getPulse() { return m_PulseRegister.read(); }
 
 uint16_t Controller::getSpeed() { return m_Speed; }
 
-void Controller::setFanSpeed(uint16_t speed)
+void Controller::setSpeed(uint16_t speed)
 {
     if (speed < 0 || speed > 1000) { speed = speed < 1000 ? 0 : 1000; }
 
@@ -40,7 +40,7 @@ void Controller::run()
     while (true)
     {
         // TODO: block on queue waiting for new fan speed setting
-        if (true) { setFanSpeed(newSpeed); }
+        setSpeed(static_cast<uint16_t>(newSpeed));
     }
 }
 

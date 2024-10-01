@@ -19,7 +19,7 @@ class Controller : public Task::BaseTask
     Controller(const Controller &) = delete;
     uint16_t getPulse();
     uint16_t getSpeed();
-    void setFanSpeed(uint16_t speed);
+    void setSpeed(uint16_t speed);
     void run();
 
   private:
