@@ -28,9 +28,11 @@ class BaseTask
              priority taskPriority);
     virtual ~BaseTask(){};
     virtual void run() = 0;
+    TaskHandle_t getHandle();
 
   private:
     const std::string m_Name;
+    TaskHandle_t m_Handle;
     static void runner(void *params);
 };
 
