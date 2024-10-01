@@ -34,12 +34,19 @@ add_executable(${PROJECT_NAME}
         uart/PicoOsUart.cpp
 
         TestTask.cpp
+        task/localUI/localUI.hpp
+        task/localUI/localUI.cpp
 )
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         config
+        gpio
+        display
+        i2c
+        sensor
+        task
 )
 
 # Compile definitions
