@@ -1,7 +1,6 @@
-#ifndef HANDLER_HPP
-#define HANDLER_HPP
+#ifndef READER_HPP
+#define READER_HPP
 
-// TODO: Trigger reading from modbus and update sensor values to relevant classes
 #include "sensor/BaseSensor.hpp"
 #include "task/BaseTask.hpp"
 
@@ -11,18 +10,18 @@
 
 namespace Sensor
 {
-class Handler : public Task::BaseTask
+class Reader : public Task::BaseTask
 {
   public:
-    Handler(uint32_t updateFrequency);
+    Reader(uint32_t msUpdateRate = 250);
     void attach(std::shared_ptr<Sensor::BaseSensor> sensor);
     void run() override;
 
   private:
-    uint32_t m_UpdateFrequency;
+    uint32_t m_UpdateRate;
     std::vector<std::shared_ptr<Sensor::BaseSensor>> m_Sensors;
     void update();
 };
 } // namespace Sensor
 
-#endif /* HANDLER_HPP */
+#endif /* READER_HPP */

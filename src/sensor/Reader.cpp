@@ -1,4 +1,4 @@
-#include "Handler.hpp"
+#include "Reader.hpp"
 
 #include "portmacro.h"
 #include "projdefs.h"
@@ -10,28 +10,28 @@
 namespace Sensor
 {
 
-Handler::Handler(uint32_t updateFrequency) :
-    Task::BaseTask{"SensorHandler", 512, this, Task::MED},
-    m_UpdateFrequency{updateFrequency}
+Reader::Reader(uint32_t msUpdateRate) :
+    Task::BaseTask{"SensorReader", 256, this, Task::MED},
+    m_UpdateRate{msUpdateRate}
 {}
 
-void Handler::attach(std::shared_ptr<Sensor::BaseSensor> sensor)
+void Reader::attach(std::shared_ptr<Sensor::BaseSensor> sensor)
 {
     m_Sensors.push_back(sensor);
 }
 
-void Handler::run()
+void Reader::run()
 {
     TickType_t lastUpdate = xTaskGetTickCount();
 
     while (true)
     {
         update();
-        xTaskDelayUntil(&lastUpdate, pdMS_TO_TICKS(m_UpdateFrequency));
+        xTaskDelayUntil(&lastUpdate, pdMS_TO_TICKS(m_UpdateRate));
     }
 }
 
-void Handler::update()
+void Reader::update()
 {
     for (auto &sensor : m_Sensors) { sensor->update(); }
 }

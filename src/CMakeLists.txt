@@ -23,8 +23,8 @@ add_executable(${PROJECT_NAME}
         semaphore/Mutex.cpp
 
         sensor/GMP252.cpp
-        sensor/Handler.cpp
         sensor/HMP60.cpp
+        sensor/Reader.cpp
         sensor/SDP600.cpp
 
         # storage/Eeprom.cpp
