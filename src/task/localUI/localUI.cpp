@@ -89,12 +89,10 @@ void UI::handleInput(std::shared_ptr<ssd1306os> display)
     {
         if (command == GPIO::ROT_A) {
             m_Co2Target += 10; // Increment CO2 level
-            vTaskDelay(pdMS_TO_TICKS(500));
             updateDisplay(display);
 
         } else if (command == GPIO::ROT_B) {
             m_Co2Target -= 10; // Decrement CO2 level
-            vTaskDelay(pdMS_TO_TICKS(500));
             updateDisplay(display);
 
         } else if (command == GPIO::ROT_SW) {
