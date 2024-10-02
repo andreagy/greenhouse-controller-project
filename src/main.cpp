@@ -43,14 +43,13 @@ int main()
     auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
     // Create queue for rotary encoder
-    QueueHandle_t rotaryQueue = xQueueCreate(10, sizeof(GPIO::encoderPin));
+    QueueHandle_t rotaryQueue = xQueueCreate(5, sizeof(GPIO::encoderPin));
 
     // Create task objects
     auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
     auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
-    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient,co2Controller->getHandle(),
-                                         picoI2c1, co2Sensor, rhSensor, paSensor);
+    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor, fanController->getHandle());
+    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -60,7 +59,6 @@ int main()
     // Delete task objects
     delete rotary;
     delete fanController;
-    delete co2Controller;
     delete localUI;
 
     return 0;

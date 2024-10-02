@@ -24,27 +24,27 @@ class UI : public BaseTask
   public:
     UI(QueueHandle_t rotaryQueue,
        const std::shared_ptr<Modbus::Client>& modbusClient,
-       TaskHandle_t co2ControllerHandle,
+       const std::shared_ptr<Task::Co2::Controller>& co2Controller,
        const std::shared_ptr<I2c::PicoI2C>& i2c,
        const std::shared_ptr<Sensor::GMP252>& co2Sensor,
        const std::shared_ptr<Sensor::HMP60>& tempRhSensor,
        const std::shared_ptr<Sensor::SDP600>& paSensor);
     void run() override;
+    static bool updateDisplayFlag;
 
   private:
-    void initializeDisplay(std::shared_ptr<ssd1306os> display);
-    void updateDisplay(std::shared_ptr<ssd1306os> display);
-    void handleInput(std::shared_ptr<ssd1306os> display);
-    void setCO2Level(float level);
-    void saveToEEPROM();
-    void readFromEEPROM();
-
+    void initializeDisplay();
+    void handleInput();
+    void updateDisplay();
+    static void displayRefreshCallback(TimerHandle_t xTimer);
+    //void saveToEEPROM();
+    //void readFromEEPROM();
     float m_Co2Target;
     QueueHandle_t rotaryQueue;
     const uint32_t CO2_SET_POINT_ADDRESS = 0x00; // EEPROM address for CO2 set point
     std::shared_ptr<I2c::PicoI2C> i2cBus;
-    //ssd1306os display;
-    TaskHandle_t co2ControllerHandle;
+    std::shared_ptr<ssd1306os> display;
+    std::shared_ptr<Co2::Controller> co2Controller;
     std::shared_ptr<Sensor::GMP252> co2Sensor;
     std::shared_ptr<Sensor::HMP60> tempRhSensor;
     std::shared_ptr<Sensor::SDP600> paSensor;
