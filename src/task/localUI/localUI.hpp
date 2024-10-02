@@ -2,10 +2,9 @@
 #define LOCALUI_HPP
 
 #include "task/BaseTask.hpp"
-#include "RotaryEncoder.hpp"
-#include "ssd1306.h"
-#include "ssd1306os.h"
-#include "PicoI2C.hpp"
+//#include "display/ssd1306.h"
+#include "display/ssd1306os.h"
+#include "i2c/PicoI2C.hpp"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
 #include "sensor/SDP600.hpp"
@@ -25,27 +24,30 @@ class UI : public BaseTask
   public:
     UI(QueueHandle_t rotaryQueue,
        const std::shared_ptr<Modbus::Client>& modbusClient,
-       TaskHandle_t co2ControllerHandle);
+       TaskHandle_t co2ControllerHandle,
+       const std::shared_ptr<I2c::PicoI2C>& i2c,
+       const std::shared_ptr<Sensor::GMP252>& co2Sensor,
+       const std::shared_ptr<Sensor::HMP60>& tempRhSensor,
+       const std::shared_ptr<Sensor::SDP600>& paSensor);
     void run() override;
 
   private:
-    void initializeDisplay();
-    void updateDisplay();
-    void handleInput();
+    void initializeDisplay(std::shared_ptr<ssd1306os> display);
+    void updateDisplay(std::shared_ptr<ssd1306os> display);
+    void handleInput(std::shared_ptr<ssd1306os> display);
     void setCO2Level(float level);
     void saveToEEPROM();
     void readFromEEPROM();
 
     float m_Co2Target;
-    GPIO::RotaryEncoder m_RotaryEncoder;
     QueueHandle_t rotaryQueue;
     const uint32_t CO2_SET_POINT_ADDRESS = 0x00; // EEPROM address for CO2 set point
     std::shared_ptr<I2c::PicoI2C> i2cBus;
-    ssd1306os display;
-    Sensor::HMP60 tempRHSensor;
-    Sensor::SDP600 pressureSensor;
-    Sensor::GMP252 co2Sensor;
+    //ssd1306os display;
     TaskHandle_t co2ControllerHandle;
+    std::shared_ptr<Sensor::GMP252> co2Sensor;
+    std::shared_ptr<Sensor::HMP60> tempRhSensor;
+    std::shared_ptr<Sensor::SDP600> paSensor;
 };
 
 } // namespace LocalUI

@@ -12,6 +12,7 @@
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
+#include "gpio/RotaryEncoder.hpp"
 
 #include <memory>
 
@@ -45,9 +46,11 @@ int main()
     QueueHandle_t rotaryQueue = xQueueCreate(10, sizeof(GPIO::encoderPin));
 
     // Create task objects
+    auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
     auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor, fanController->getHandle());
-    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient,co2Controller->getHandle());
+    auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
+    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient,co2Controller->getHandle(),
+                                         picoI2c1, co2Sensor, rhSensor, paSensor);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -55,7 +58,9 @@ int main()
     while (true) {};
 
     // Delete task objects
+    delete rotary;
     delete fanController;
+    delete co2Controller;
     delete localUI;
 
     return 0;
