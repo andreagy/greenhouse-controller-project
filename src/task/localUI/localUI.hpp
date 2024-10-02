@@ -34,8 +34,11 @@ class UI : public BaseTask
 
   private:
     void initializeDisplay();
-    void handleInput();
-    void updateDisplay();
+    void handleCO2Input();
+    void displayMenu();
+    void displaySensorValues();
+    void displayWiFiSettings();
+    void displayThingSpeakSettings();
     static void displayRefreshCallback(TimerHandle_t xTimer);
     //void saveToEEPROM();
     //void readFromEEPROM();
@@ -48,6 +51,8 @@ class UI : public BaseTask
     std::shared_ptr<Sensor::GMP252> co2Sensor;
     std::shared_ptr<Sensor::HMP60> tempRhSensor;
     std::shared_ptr<Sensor::SDP600> paSensor;
+    std::string ssid;
+    std::string password;
 };
 
 } // namespace LocalUI
