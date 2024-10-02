@@ -21,6 +21,7 @@ class Controller : public BaseTask
     void setTarget(float target);
     float getTarget();
     void run() override;
+    TaskHandle_t getHandle() const { return m_handle; }
 
   private:
     const uint m_ValvePin = 27;
@@ -29,6 +30,7 @@ class Controller : public BaseTask
     float m_Co2Target;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
     TaskHandle_t m_FanControlHandle;
+    TaskHandle_t m_handle;
     void pollSensor(uint16_t interval);
 };
 

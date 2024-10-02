@@ -29,6 +29,8 @@ Controller::Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
     gpio_init(m_ValvePin);
     gpio_set_dir(m_ValvePin, GPIO_OUT);
     gpio_put(m_ValvePin, 0);
+
+    m_handle = xTaskGetCurrentTaskHandle();
 }
 
 void Controller::setTarget(float target)
@@ -53,11 +55,16 @@ void Controller::run()
     taskState state = VALVE_CLOSED;
     uint16_t pollInterval = 250;
     uint32_t fanSpeed = 0;
+    uint32_t receivedTarget;
 
     // setTarget(900);
 
     while (true)
-    {
+    {   // Wait for new target CO2 level from localUI
+        if (xTaskNotifyWait(0, 0, &receivedTarget, portMAX_DELAY) == pdPASS) {
+            setTarget(*(float*)&receivedTarget);
+        }
+
         pollSensor(pollInterval);
 
         switch (state)
