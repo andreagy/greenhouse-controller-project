@@ -47,7 +47,7 @@ int main()
     // Create task objects
     auto fanController = new Task::Fan::Controller(modbusClient);
     auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor, fanController->getHandle());
-    auto localUI = new Task::LocalUI::UI(rotaryQueue, picoI2c1, modbusClient,co2Controller->getHandle());
+    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient,co2Controller->getHandle());
 
     // Start scheduler
     vTaskStartScheduler();

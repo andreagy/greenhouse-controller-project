@@ -3,6 +3,7 @@
 
 #include "task/BaseTask.hpp"
 #include "RotaryEncoder.hpp"
+#include "ssd1306.h"
 #include "ssd1306os.h"
 #include "PicoI2C.hpp"
 #include "sensor/GMP252.hpp"
@@ -23,7 +24,6 @@ class UI : public BaseTask
 {
   public:
     UI(QueueHandle_t rotaryQueue,
-       const std::shared_ptr<I2c::PicoI2C>& i2cBus,
        const std::shared_ptr<Modbus::Client>& modbusClient,
        TaskHandle_t co2ControllerHandle);
     void run() override;
@@ -40,6 +40,7 @@ class UI : public BaseTask
     GPIO::RotaryEncoder m_RotaryEncoder;
     QueueHandle_t rotaryQueue;
     const uint32_t CO2_SET_POINT_ADDRESS = 0x00; // EEPROM address for CO2 set point
+    std::shared_ptr<I2c::PicoI2C> i2cBus;
     ssd1306os display;
     Sensor::HMP60 tempRHSensor;
     Sensor::SDP600 pressureSensor;

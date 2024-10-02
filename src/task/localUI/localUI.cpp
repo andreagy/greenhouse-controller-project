@@ -12,14 +12,14 @@ namespace LocalUI
 {
 
 UI::UI(QueueHandle_t rotaryQueue,
-       const std::shared_ptr<I2c::PicoI2C>& i2cBus,
        const std::shared_ptr<Modbus::Client>& modbusClient,
        TaskHandle_t co2ControllerHandle)
     : BaseTask{"LocalUI", 256, this, LOW},
       m_RotaryEncoder{rotaryQueue, 256, LOW},
       rotaryQueue{rotaryQueue},
       m_Co2Target{900},
-      display{i2cBus},
+      i2cBus(std::make_shared<I2c::PicoI2C>(1, 400000)),
+      display(i2cBus),
       tempRHSensor{modbusClient},
       pressureSensor{i2cBus},
       co2Sensor{modbusClient},
@@ -31,7 +31,7 @@ UI::UI(QueueHandle_t rotaryQueue,
 
 void UI::initializeDisplay() {
     display.fill(0);
-    display.text("Initializing...", 0, 0);
+    display.text("Boot", 0, 0);
     display.show();
 }
 
@@ -59,9 +59,10 @@ void UI::updateDisplay()
 
     display.fill(0); // Clear the display
     display.text("CO2: " + std::to_string(co2Level) + " ppm", 0, 0);
-    display.text("Humidity: " + std::to_string(humidity) + " %", 0, 10);
-    display.text("Temp: " + std::to_string(temperature) + " C", 0, 20);
-    display.text("Pressure: " + std::to_string(pressure) + " Pa", 0, 30);
+    display.text("Target CO2: " + std::to_string(m_Co2Target) + " ppm", 0, 10);
+    display.text("Humidity: " + std::to_string(humidity) + " %", 0, 20);
+    display.text("Temp: " + std::to_string(temperature) + " C", 0, 30);
+    display.text("Pressure: " + std::to_string(pressure) + " Pa", 0, 40);
     display.show();
 }
 
@@ -72,8 +73,12 @@ void UI::handleInput()
     {
         if (command == GPIO::ROT_A) {
             setCO2Level(co2Sensor.getCo2() + 10); // Increment CO2 level
+            updateDisplay();
+
         } else if (command == GPIO::ROT_B) {
             setCO2Level(co2Sensor.getCo2() - 10); // Decrement CO2 level
+            updateDisplay();
+
         } else if (command == GPIO::ROT_SW) {
             xTaskNotify(co2ControllerHandle, *(uint32_t*)&m_Co2Target, eSetValueWithOverwrite); // TODO: implement in Co2Controller
             //saveToEEPROM(); // TODO: implement saving when the button is pressed
