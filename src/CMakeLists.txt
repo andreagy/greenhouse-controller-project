@@ -10,12 +10,13 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
-        ipstack/IPStack.cpp
-        ipstack/picow_tls_client.c
-        ipstack/tls_common.c
-
-        modbus/Client.cpp
+        # ipstack/IPStack.cpp
+        # ipstack/picow_tls_client.c
+        # ipstack/tls_common.c
+        modbus/MbClient.cpp
         modbus/Register.cpp
+
+        network/TlsClient.cpp
 
         semaphore/Binary.cpp
         semaphore/Mutex.cpp
@@ -28,6 +29,7 @@ add_executable(${PROJECT_NAME}
         task/BaseTask.cpp
         task/co2/Co2Controller.cpp
         task/fan/FanController.cpp
+        task/network/Manager.cpp
 
         timer/Timeout.cpp
 
