@@ -5,7 +5,7 @@
 #ifndef REGISTER_HPP
 #define REGISTER_HPP
 
-#include "Client.hpp"
+#include "MbClient.hpp"
 #include "semaphore/Mutex.hpp"
 
 #include <memory>
