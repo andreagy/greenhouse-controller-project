@@ -2,7 +2,6 @@
 #define LOCALUI_HPP
 
 #include "task/BaseTask.hpp"
-//#include "display/ssd1306.h"
 #include "display/ssd1306os.h"
 #include "i2c/PicoI2C.hpp"
 #include "sensor/GMP252.hpp"
@@ -11,7 +10,7 @@
 #include "task/co2/Co2Controller.hpp"
 #include "queue.h"
 #include <cstdint>
-#include <memory> // Include for std::shared_ptr
+#include <memory>
 
 namespace Task
 {
@@ -19,10 +18,21 @@ namespace Task
 namespace LocalUI
 {
 
+enum MenuState {
+    MAIN_MENU,
+    SENSOR_VALUES,
+    WIFI_SETTINGS,
+    THINGSPEAK_SETTINGS
+};
+
+// Declare currentState as extern
+extern MenuState currentState;
+
 class UI : public BaseTask
 {
   public:
     UI(QueueHandle_t rotaryQueue,
+       QueueHandle_t buttonQueue,
        const std::shared_ptr<Modbus::Client>& modbusClient,
        const std::shared_ptr<Task::Co2::Controller>& co2Controller,
        const std::shared_ptr<I2c::PicoI2C>& i2c,
@@ -34,17 +44,15 @@ class UI : public BaseTask
 
   private:
     void initializeDisplay();
-    void handleCO2Input();
+    void setCO2Target();
     void displayMenu();
     void displaySensorValues();
     void displayWiFiSettings();
     void displayThingSpeakSettings();
     static void displayRefreshCallback(TimerHandle_t xTimer);
-    //void saveToEEPROM();
-    //void readFromEEPROM();
     float m_Co2Target;
     QueueHandle_t rotaryQueue;
-    const uint32_t CO2_SET_POINT_ADDRESS = 0x00; // EEPROM address for CO2 set point
+    QueueHandle_t buttonQueue;
     std::shared_ptr<I2c::PicoI2C> i2cBus;
     std::shared_ptr<ssd1306os> display;
     std::shared_ptr<Co2::Controller> co2Controller;

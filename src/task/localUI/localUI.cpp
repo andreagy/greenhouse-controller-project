@@ -3,9 +3,10 @@
 #include "hardware/gpio.h"
 #include "timer/Timeout.hpp"
 #include "timers.h"
-#include <iostream> // For debugging output
-#include <string>   // For displaying text
+#include <iostream>
+#include <string>
 #include "gpio/RotaryEncoder.hpp"
+#include "gpio/Buttons.hpp"
 #include <iomanip>
 #include <sstream>
 #include <vector>
@@ -17,7 +18,10 @@ namespace Task
 namespace LocalUI
 {
 
+MenuState currentState = MAIN_MENU;
+
 UI::UI(QueueHandle_t rotaryQueue,
+       QueueHandle_t buttonQueue,
        const std::shared_ptr<Modbus::Client>& modbusClient,
        const std::shared_ptr<Task::Co2::Controller>& co2Controller,
        const std::shared_ptr<I2c::PicoI2C>& i2c,
@@ -27,6 +31,7 @@ UI::UI(QueueHandle_t rotaryQueue,
     : BaseTask{"LocalUI", 256, this, LOW},
       m_Co2Target{900},
       rotaryQueue{rotaryQueue},
+      buttonQueue{buttonQueue},
       i2cBus{i2c},
       co2Controller{co2Controller},
       co2Sensor{co2Sensor},
@@ -45,6 +50,7 @@ void UI::initializeDisplay() {
 
 void UI::run()
 {
+    currentState = MAIN_MENU;
     display = std::make_shared<ssd1306os>(i2cBus);
     initializeDisplay();
     displayMenu();
@@ -63,10 +69,25 @@ void UI::run()
     while (true)
     {
         if (UI::updateDisplayFlag) {
-            displaySensorValues();
+            displayMenu();
+            switch (currentState)
+            {
+                case MAIN_MENU:
+                    displayMenu();
+                    break;
+                case SENSOR_VALUES:
+                    displaySensorValues();
+                    setCO2Target();
+                    break;
+                case WIFI_SETTINGS:
+                    displayWiFiSettings();
+                    break;
+                case THINGSPEAK_SETTINGS:
+                    displayThingSpeakSettings();
+                    break;
+            }
             UI::updateDisplayFlag = false;
         }
-        handleCO2Input();
     }
 }
 
@@ -75,53 +96,57 @@ void UI::displayRefreshCallback(TimerHandle_t xTimer)
     UI::updateDisplayFlag = true;
 }
 
-
-void UI::displayMenu() {
+void UI::displayMenu()
+{
     const std::vector<std::string> menuOptions = {
-        "Show Sensors",
+        "Sensor Values",
         "Set Network",
         "Set ThingSpeak"
     };
 
-    int selectedIndex = 0;
+    static int selectedIndex = 0;
 
-    while (true) {
-        display->fill(0); // Clear the display
+    display->fill(0);
 
-        // Display each menu option
-        for (int i = 0; i < menuOptions.size(); ++i) {
-            if (i == selectedIndex) {
-                display->text("> " + menuOptions[i], 0, i * 10);
-            } else {
-                display->text("  " + menuOptions[i], 0, i * 10);
-            }
+    // Display each menu option
+    for (int i = 0; i < menuOptions.size(); ++i) {
+        if (i == selectedIndex) {
+            display->text("> " + menuOptions[i], 0, i * 10);
+        } else {
+            display->text("  " + menuOptions[i], 0, i * 10);
         }
+    }
+    display->text(" " + std::to_string(rand()%1000), 0, 30);
+    display->show();
 
-        display->show();
-
-        GPIO::encoderPin command;
-        if (xQueueReceive(rotaryQueue, &command, 0) == pdPASS) {
-            if (command == GPIO::ROT_A) {
-                selectedIndex = (selectedIndex + 1) % menuOptions.size();
-            } else if (command == GPIO::ROT_B) {
-                selectedIndex = (selectedIndex - 1 + menuOptions.size()) % menuOptions.size();
-            } else if (command == GPIO::ROT_SW) {
-                switch (selectedIndex) {
-                    case 0:
-                        displaySensorValues();
-                        break;
-                    case 1:
-                        displayWiFiSettings();
-                        break;
-                    case 2:
-                        displayThingSpeakSettings();
-                        break;
-                }
-                break;
+    GPIO::encoderPin command;
+    if (xQueueReceive(rotaryQueue, &command, 0) == pdPASS) {
+        if (command == GPIO::ROT_A) {
+            selectedIndex = (selectedIndex + 1) % menuOptions.size();
+        } else if (command == GPIO::ROT_B) {
+            selectedIndex = (selectedIndex - 1 + menuOptions.size()) % menuOptions.size();
+        } else if (command == GPIO::ROT_SW) {
+            if (selectedIndex == 0) {
+                displaySensorValues();
+            } else if (selectedIndex == 1) {
+                displayWiFiSettings();
+            } else if (selectedIndex == 2) {
+                displayThingSpeakSettings();
             }
         }
     }
+
+    // Handle Back button (SW0_PIN)
+    GPIO::buttonPin buttonCommand;
+    if (xQueueReceive(buttonQueue, &buttonCommand, 0) == pdPASS) {
+        if (buttonCommand == GPIO::SW0_PIN) {
+            // Exit back to main menu or previous state
+            currentState = MAIN_MENU;
+            return;  // Exit the current menu loop
+        }
+    }
 }
+
 
 void UI::displaySensorValues()
 {
@@ -188,42 +213,41 @@ void UI::displayWiFiSettings()
         display->show();
 
         GPIO::encoderPin command;
-        if (xQueueReceive(rotaryQueue, &command, pdMS_TO_TICKS(100)) == pdPASS)
-        {
-            if (command == GPIO::ROT_A)
-            {
-                charIndex = (charIndex + 1) % characterSet.size(); // Move forward
-            }
-            else if (command == GPIO::ROT_B)
-            {
-                charIndex = (charIndex - 1 + characterSet.size()) % characterSet.size(); // Move backward
-            }
-            else if (command == GPIO::ROT_SW)
-            {
-                // Add selected character
-                if (isSSIDInput && ssid.length() < maxSSIDSize)
-                {
+        if (xQueueReceive(rotaryQueue, &command, pdMS_TO_TICKS(100)) == pdPASS) {
+            if (command == GPIO::ROT_A) {
+                charIndex = (charIndex + 1) % characterSet.size();
+            } else if (command == GPIO::ROT_B) {
+                charIndex = (charIndex - 1 + characterSet.size()) % characterSet.size();
+            } else if (command == GPIO::ROT_SW) {
+                if (isSSIDInput && ssid.length() < maxSSIDSize) {
                     ssid += characterSet[charIndex];
-                }
-                else if (!isSSIDInput && password.length() < maxPasswordSize)
-                {
+                } else if (!isSSIDInput && password.length() < maxPasswordSize) {
                     password += characterSet[charIndex];
                 }
             }
+        }
 
-            // TODO: Handle deletion
+        // Handle Delete button (SW1_PIN)
+        GPIO::buttonPin buttonCommand;
+        if (xQueueReceive(buttonQueue, &buttonCommand, pdMS_TO_TICKS(100)) == pdPASS) {
+            if (buttonCommand == GPIO::SW1_PIN) {
+                // Delete last character from SSID or Password
+                if (isSSIDInput && !ssid.empty()) {
+                    ssid.pop_back();
+                } else if (!isSSIDInput && !password.empty()) {
+                    password.pop_back();
+                }
+            }
         }
 
         // Switch from SSID to Password entry after max SSID length
-        if (ssid.length() >= maxSSIDSize && isSSIDInput)
-        {
+        if (ssid.length() >= maxSSIDSize && isSSIDInput) {
             // TODO: handle sending SSID to network task
             isSSIDInput = false;
         }
 
         // Break out of the loop when the password is fully entered
-        if (!isSSIDInput && password.length() >= maxPasswordSize)
-        {
+        if (!isSSIDInput && password.length() >= maxPasswordSize) {
             // TODO: handle sending password to network task
             break;
         }
@@ -244,7 +268,7 @@ void UI::displayThingSpeakSettings() {
 
 }
 
-void UI::handleCO2Input()
+void UI::setCO2Target()
 {
     GPIO::encoderPin command;
 
@@ -252,11 +276,9 @@ void UI::handleCO2Input()
     {
         if (command == GPIO::ROT_A) {
             m_Co2Target += 10; // Increment CO2 level
-            //displaySensorValues(display);
 
         } else if (command == GPIO::ROT_B) {
             m_Co2Target -= 10; // Decrement CO2 level
-            //displaySensorValues(display);
 
         } else if (command == GPIO::ROT_SW) {
             xTaskNotify(co2Controller->getHandle(), *(uint32_t*)&m_Co2Target, eSetValueWithOverwrite);

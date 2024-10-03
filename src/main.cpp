@@ -1,4 +1,6 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
+#include "gpio/Buttons.hpp"
+#include "gpio/RotaryEncoder.hpp"
 #include "i2c/PicoI2C.hpp"
 #include "modbus/Client.hpp"
 #include "semphr.h"
@@ -12,7 +14,6 @@
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
-#include "gpio/RotaryEncoder.hpp"
 
 #include <memory>
 
@@ -42,14 +43,16 @@ int main()
     auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
     auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
-    // Create queue for rotary encoder
+    // Create queue for rotary encoder and buttons
     QueueHandle_t rotaryQueue = xQueueCreate(5, sizeof(GPIO::encoderPin));
+    QueueHandle_t buttonQueue = xQueueCreate(5, sizeof(GPIO::buttonPin));
 
     // Create task objects
     auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
+    auto button = new GPIO::ButtonHandler(buttonQueue);
     auto fanController = new Task::Fan::Controller(modbusClient);
     auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor, fanController->getHandle());
-    auto localUI = new Task::LocalUI::UI(rotaryQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
+    auto localUI = new Task::LocalUI::UI(rotaryQueue, buttonQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -58,6 +61,7 @@ int main()
 
     // Delete task objects
     delete rotary;
+    delete button;
     delete fanController;
     delete localUI;
 

@@ -35,6 +35,8 @@ add_executable(${PROJECT_NAME}
 
         TestTask.cpp
         task/localUI/localUI.cpp
+        gpio/Buttons.hpp
+        gpio/Buttons.cpp
 )
 
 # Include directories
