@@ -1,6 +1,6 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "i2c/PicoI2C.hpp"
-#include "modbus/Client.hpp"
+#include "modbus/MbClient.hpp"
 #include "semphr.h"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
@@ -8,6 +8,7 @@
 #include "task.h"
 #include "task/co2/Co2Controller.hpp"
 #include "task/fan/FanController.hpp"
+#include "task/network/Manager.hpp"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -30,19 +31,20 @@ int main()
     printf("\nBoot\n");
 
     // Create system objects
-    auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
-    auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600); // TODO: Add enums for accepted values
-    auto modbusClient = std::make_shared<Modbus::Client>(uart);
+    // auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
+    // auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
+    // auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600); // TODO: Add enums for accepted values
+    // auto modbusClient = std::make_shared<Modbus::Client>(uart);
 
     // Create sensor objects
-    auto co2Sensor = std::make_shared<Sensor::GMP252>(modbusClient);
-    auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
-    auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
+    // auto co2Sensor = std::make_shared<Sensor::GMP252>(modbusClient);
+    // auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
+    // auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
     // Create task objects
-    auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
+    // auto fanController = new Task::Fan::Controller(modbusClient);
+    // auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
+    auto netManager = new Task::Network::Manager();
 
     // Start scheduler
     vTaskStartScheduler();
@@ -50,8 +52,9 @@ int main()
     while (true) {};
 
     // Delete task objects
-    delete fanController;
-    delete co2Controller;
+    // delete fanController;
+    // delete co2Controller;
+    delete netManager;
 
     return 0;
 }
