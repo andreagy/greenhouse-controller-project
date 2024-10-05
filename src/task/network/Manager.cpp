@@ -36,12 +36,13 @@ Manager::Manager() : BaseTask{"NetworkClient", 1024, this, MED} {}
 
 void Manager::run()
 {
+    ::Network::Client tlsClient(30);
+
     // TODO: get wifi settings from eeprom or environment
     if (m_Ssid.empty()) { m_Ssid = WIFI_SSID; }
     if (m_Password.empty()) { m_Password = WIFI_PASSWORD; }
 
     int err = connect();
-    ::Network::Client tlsClient(30);
 
     if (err == 0) { m_Connected = true; }
 
