@@ -49,25 +49,8 @@ void Manager::run()
     while (true)
     {
         // TODO: handle sending thingspeak
-        if (m_Connected) {}
 
-        if (!gpio_get(9))
-        {
-            while (!gpio_get(9))
-            {
-                vTaskDelay(1);
-                /* Loop while button is pressed */
-            }
-
-            // Send thingspeak message
-            if (m_Connected)
-            {
-                if (tlsClient.open(TLS_CLIENT_SERVER, TLS_CLIENT_HTTP_REQUEST))
-                {
-                    printf("OK\n");
-                }
-            }
-        }
+        // TODO: handle getting command from talkback -> send direct notify to co2 control
     }
 }
 
