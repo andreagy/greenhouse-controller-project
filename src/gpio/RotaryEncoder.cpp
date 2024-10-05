@@ -7,6 +7,7 @@
 
 namespace GPIO
 {
+QueueHandle_t RotaryEncoder::queueHandle;
 
 RotaryEncoder::RotaryEncoder(QueueHandle_t queue,
                              uint32_t stackDepth,
@@ -27,7 +28,7 @@ void RotaryEncoder::run()
     while (true) { vTaskDelay(portMAX_DELAY); }
 }
 
-static void callback(uint gpio, uint32_t event_mask)
+void RotaryEncoder::callback(uint gpio, uint32_t event_mask)
 {
     encoderPin command = ROT_SW;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;

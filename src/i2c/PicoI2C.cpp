@@ -40,7 +40,7 @@ void PicoI2C::i2c1_irq()
         irq_set_enabled(I2C1_IRQ, false); // disable interrupt if we don't have instance
 }
 
-PicoI2C::PicoI2C(i2cBus bus_nr, uint speed) :
+PicoI2C::PicoI2C(int bus_nr, uint speed) :
     task_to_notify(nullptr),
     wbuf{nullptr},
     wctr{0},

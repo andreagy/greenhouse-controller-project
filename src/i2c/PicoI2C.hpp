@@ -22,7 +22,7 @@ enum i2cBus : uint
 class PicoI2C
 {
   public:
-    explicit PicoI2C(i2cBus bus_nr, uint speed = 100000);
+    explicit PicoI2C(int bus_nr, uint speed = 100000);
     PicoI2C(const PicoI2C &) = delete;
     uint write(uint8_t addr, const uint8_t *buffer, uint length);
     uint read(uint8_t addr, uint8_t *buffer, uint length);
