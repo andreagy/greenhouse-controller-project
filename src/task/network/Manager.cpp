@@ -9,18 +9,23 @@
 #include <pico/error.h>
 
 #include <cstdio>
+#include <string>
 
 // Testing purposes
-#define TLS_CLIENT_SERVER "api.thingspeak.com"
-#define TLS_CLIENT_HTTP_REQUEST                                                \
-    "POST /update.json HTTP/1.1\r\n"                                           \
-    "Host: api.thingspeak.com\r\n"                                             \
-    "User-Agent: PicoW\r\n"                                                    \
-    "Accept: */*\r\n"                                                          \
-    "Content-Length: 35\r\n"                                                   \
-    "Content-Type: application/x-www-form-urlencoded\r\n"                      \
-    "\r\n"                                                                     \
-    "field1=123&api_key="
+const std::string TLS_CLIENT_HTTP_REQUEST =
+    "POST /update HTTP/1.1\r\n"
+    "Host: api.thingspeak.com\r\n"
+    "User-Agent: PicoW\r\n"
+    "Accept: */*\r\n"
+    "Content-Length: 35\r\n"
+    "Content-Type: application/x-www-form-urlencoded\r\n"
+    "\r\n"
+    "api_key=" CHANNEL_API_KEY "talkback_key=" TALKBACK_API_KEY "field1="
+    + std::to_string(12)              /* co2 (ppm) */
+    + "field2=" + std::to_string(12)  /* rh (%) */
+    + "field3=" + std::to_string(12)  /* temp (C) */
+    + "field4=" + std::to_string(12)  /* speed (%) */
+    + "field5=" + std::to_string(12); /* target (ppm) */
 
 namespace Task
 {
