@@ -20,12 +20,28 @@ Client::Client(uint8_t timeout, const uint8_t *cert, size_t cert_len) :
 }
 
 Client::~Client() { altcp_tls_free_config(m_Config); }
+
+bool Client::send(const std::string &request)
+{
+    m_Request = request;
+
+    return open();
+}
+
+int Client::getError() const { return m_Error; }
+
+void Client::setError(int Error) { m_Error = Error; }
+
+std::string Client::getRequest() const { return m_Request; }
+
+altcp_pcb *Client::getPcb() const { return m_Pcb; }
+
+bool Client::open()
 {
     err_t err;
     ip_addr_t server_ip;
 
     m_Pcb = altcp_tls_new(m_Config, IPADDR_TYPE_ANY);
-    m_Request = request;
 
     if (!m_Pcb)
     {
@@ -40,9 +56,9 @@ Client::~Client() { altcp_tls_free_config(m_Config); }
 
     /* Set SNI */
     mbedtls_ssl_set_hostname(static_cast<mbedtls_ssl_context *>(altcp_tls_context(m_Pcb)),
-                             hostname.c_str());
+                             m_Hostname.c_str());
 
-    printf("resolving %s\n", hostname.c_str());
+    printf("resolving %s\n", m_Hostname.c_str());
 
     // cyw43_arch_lwip_begin/end should be used around calls into lwIP to ensure correct locking.
     // You can omit them if you are in a callback from lwIP. Note that when using pico_cyw_arch_poll
@@ -50,7 +66,7 @@ Client::~Client() { altcp_tls_free_config(m_Config); }
     // case you switch the cyw43_arch type later.
     cyw43_arch_lwip_begin();
 
-    err = dns_gethostbyname(hostname.c_str(), &server_ip, tlsDnsFound, this);
+    err = dns_gethostbyname(m_Hostname.c_str(), &server_ip, tlsDnsFound, this);
 
     if (err == ERR_OK)
     {
@@ -67,14 +83,6 @@ Client::~Client() { altcp_tls_free_config(m_Config); }
 
     return err == ERR_OK || err == ERR_INPROGRESS;
 }
-
-int Client::getError() const { return m_Error; }
-
-void Client::setError(int Error) { m_Error = Error; }
-
-std::string Client::getRequest() const { return m_Request; }
-
-altcp_pcb *Client::getPcb() const { return m_Pcb; }
 
 void Client::connect(const ip_addr_t *ipaddr)
 {
