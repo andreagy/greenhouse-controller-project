@@ -14,7 +14,7 @@ class Client
 {
   public:
     Client(uint8_t timeout, const uint8_t *cert = NULL, size_t cert_len = 0);
-    bool open(const std::string &hostname, const std::string &request);
+    ~Client();
     int getError() const;
     void setError(int Error);
     void setTimeout(int timeout);

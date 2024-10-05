@@ -19,7 +19,7 @@ Client::Client(uint8_t timeout, const uint8_t *cert, size_t cert_len) :
                               MBEDTLS_SSL_VERIFY_OPTIONAL);
 }
 
-bool Client::open(const std::string &hostname, const std::string &request)
+Client::~Client() { altcp_tls_free_config(m_Config); }
 {
     err_t err;
     ip_addr_t server_ip;
