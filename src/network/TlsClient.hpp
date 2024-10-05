@@ -22,6 +22,7 @@ class Client
     altcp_pcb *getPcb() const;
 
   private:
+    const std::string m_Hostname = "api.thingspeak.com";
     bool m_Complete;
     int m_Error;
     uint8_t m_Timeout;
