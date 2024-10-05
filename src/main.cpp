@@ -51,7 +51,7 @@ int main()
     auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
     auto button = new GPIO::ButtonHandler(buttonQueue);
     auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor, fanController->getHandle());
+    auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
     auto localUI = new Task::LocalUI::UI(rotaryQueue, buttonQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
 
     // Start scheduler
@@ -63,7 +63,9 @@ int main()
     delete rotary;
     delete button;
     delete fanController;
+
     delete localUI;
+    delete co2Controller;
 
     return 0;
 }
