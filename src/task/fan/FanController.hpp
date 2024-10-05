@@ -1,7 +1,7 @@
 #ifndef FANCONTROLLER_HPP
 #define FANCONTROLLER_HPP
 
-#include "modbus/Client.hpp"
+#include "modbus/MbClient.hpp"
 #include "modbus/Register.hpp"
 #include "task/BaseTask.hpp"
 

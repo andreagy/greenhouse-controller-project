@@ -21,5 +21,9 @@
     "PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/2.0.0",
     "PICO_TOOLCHAIN_PATH": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1",
     "Path": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin;${env:USERPROFILE}/.pico-sdk/picotool/2.0.0/picotool;${env:PATH}"
+  },
+  "cmake.configureEnvironment": {
+    "WIFI_SSID": "",
+    "WIFI_PASSWORD": ""
   }
 }

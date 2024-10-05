@@ -10,12 +10,13 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
-        ipstack/IPStack.cpp
-        ipstack/picow_tls_client.c
-        ipstack/tls_common.c
-
-        modbus/Client.cpp
+        # ipstack/IPStack.cpp
+        # ipstack/picow_tls_client.c
+        # ipstack/tls_common.c
+        modbus/MbClient.cpp
         modbus/Register.cpp
+
+        network/TlsClient.cpp
 
         semaphore/Binary.cpp
         semaphore/Mutex.cpp
@@ -28,6 +29,7 @@ add_executable(${PROJECT_NAME}
         task/BaseTask.cpp
         task/co2/Co2Controller.cpp
         task/fan/FanController.cpp
+        task/network/Manager.cpp
 
         timer/Timeout.cpp
 
@@ -49,6 +51,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         WIFI_SSID=\"$ENV{WIFI_SSID}\"
         WIFI_PASSWORD=\"$ENV{WIFI_PASSWORD}\"
+        CHANNEL_API_KEY=\"$ENV{CHANNEL_API_KEY}\"
+        TALKBACK_API_KEY=\"$ENV{TALKBACK_API_KEY}\"
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND
 )

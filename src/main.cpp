@@ -2,7 +2,7 @@
 #include "gpio/Buttons.hpp"
 #include "gpio/RotaryEncoder.hpp"
 #include "i2c/PicoI2C.hpp"
-#include "modbus/Client.hpp"
+#include "modbus/MbClient.hpp"
 #include "semphr.h"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
@@ -10,6 +10,7 @@
 #include "task.h"
 #include "task/co2/Co2Controller.hpp"
 #include "task/fan/FanController.hpp"
+#include "task/network/Manager.hpp"
 #include "task/localUI/LocalUI.hpp"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
@@ -47,12 +48,14 @@ int main()
     QueueHandle_t rotaryQueue = xQueueCreate(5, sizeof(GPIO::encoderPin));
     QueueHandle_t buttonQueue = xQueueCreate(5, sizeof(GPIO::buttonPin));
 
-    // Create task objects
+    // Create task objects  
     auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
     auto button = new GPIO::ButtonHandler(buttonQueue);
     auto fanController = new Task::Fan::Controller(modbusClient);
     auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
     auto localUI = new Task::LocalUI::UI(rotaryQueue, buttonQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
+    auto netManager = new Task::Network::Manager();
+
 
     // Start scheduler
     vTaskStartScheduler();
@@ -63,9 +66,9 @@ int main()
     delete rotary;
     delete button;
     delete fanController;
-
     delete localUI;
     delete co2Controller;
+    delete netManager;
 
     return 0;
 }

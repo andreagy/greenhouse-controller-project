@@ -1,5 +1,5 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#ifndef MBCLIENT_HPP
+#define MBCLIENT_HPP
 
 //
 // Created by Keijo Länsikunnas on 14.2.2024.
@@ -59,4 +59,4 @@ class Client
 
 } // namespace Modbus
 
-#endif /* CLIENT_HPP */
+#endif /* MBCLIENT_HPP */

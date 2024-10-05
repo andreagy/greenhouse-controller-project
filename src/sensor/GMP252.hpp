@@ -1,7 +1,7 @@
 #ifndef GMP252_HPP
 #define GMP252_HPP
 
-#include "modbus/Client.hpp"
+#include "modbus/MbClient.hpp"
 #include "modbus/Register.hpp"
 #include "sensor/BaseSensor.hpp"
 

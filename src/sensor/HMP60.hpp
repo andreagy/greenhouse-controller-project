@@ -1,7 +1,7 @@
 #ifndef HMP60_HPP
 #define HMP60_HPP
 
-#include "modbus/Client.hpp"
+#include "modbus/MbClient.hpp"
 #include "modbus/Register.hpp"
 #include "sensor/BaseSensor.hpp"
 
