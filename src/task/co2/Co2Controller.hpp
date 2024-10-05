@@ -28,8 +28,8 @@ class Controller : public BaseTask
     const float m_Co2Max = 1500;
     float m_Co2Target;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    TaskHandle_t m_FanControlHandle;
     void pollSensor(uint16_t interval);
+    TaskHandle_t m_FanControlHandle;
 };
 
 } // namespace Co2

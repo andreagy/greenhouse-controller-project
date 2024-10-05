@@ -34,6 +34,9 @@ add_executable(${PROJECT_NAME}
         uart/PicoOsUart.cpp
 
         TestTask.cpp
+        task/localUI/localUI.cpp
+        gpio/Buttons.hpp
+        gpio/Buttons.cpp
 )
 
 # Include directories

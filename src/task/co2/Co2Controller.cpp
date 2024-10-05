@@ -6,6 +6,7 @@
 #include <hardware/gpio.h>
 
 #include <cstdint>
+#include <climits>
 
 namespace Task
 {
@@ -53,11 +54,16 @@ void Controller::run()
     taskState state = VALVE_CLOSED;
     uint16_t pollInterval = 250;
     uint32_t fanSpeed = 0;
+    uint32_t receivedTarget = 0;
 
     // setTarget(900);
 
     while (true)
-    {
+    {   // Wait for new target CO2 level from localUI
+        if (xTaskNotifyWait(0, ULONG_MAX, &receivedTarget, 0) == pdPASS) {
+            setTarget(*(float*)&receivedTarget);
+        }
+
         pollSensor(pollInterval);
 
         switch (state)
