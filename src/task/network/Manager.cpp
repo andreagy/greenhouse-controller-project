@@ -13,35 +13,28 @@
 // Testing purposes
 #define TLS_CLIENT_SERVER "api.thingspeak.com"
 #define TLS_CLIENT_HTTP_REQUEST                                                \
-    "POST /talkbacks/52920/commands/execute.json HTTP/1.1\r\n"                 \
+    "POST /update.json HTTP/1.1\r\n"                                           \
     "Host: api.thingspeak.com\r\n"                                             \
     "User-Agent: PicoW\r\n"                                                    \
     "Accept: */*\r\n"                                                          \
-    "Content-Length: 24\r\n"                                                   \
+    "Content-Length: 35\r\n"                                                   \
     "Content-Type: application/x-www-form-urlencoded\r\n"                      \
     "\r\n"                                                                     \
-    "api_key=GK2UGCNHFLC4ZVWN\r\n"                                             \
-    "field1=123"
+    "field1=123&api_key="
 
 namespace Task
 {
 namespace Network
 {
 
-Manager::Manager() : BaseTask{"NetworkClient", 256, this, MED}
-{
-    // TODO: get wifi settings from eeprom
-    // If no valid wifi settings, get from environment
-    if (m_Ssid.empty()) { m_Ssid = WIFI_SSID; }
-    if (m_Password.empty()) { m_Password = WIFI_PASSWORD; }
-
-    gpio_init(9);
-    gpio_set_dir(9, GPIO_IN);
-    gpio_pull_up(9);
-}
+Manager::Manager() : BaseTask{"NetworkClient", 1024, this, MED} {}
 
 void Manager::run()
 {
+    // TODO: get wifi settings from eeprom or environment
+    if (m_Ssid.empty()) { m_Ssid = WIFI_SSID; }
+    if (m_Password.empty()) { m_Password = WIFI_PASSWORD; }
+
     int err = connect();
     ::Network::Client tlsClient(30);
 
@@ -50,12 +43,12 @@ void Manager::run()
     while (true)
     {
         // TODO: handle sending thingspeak
+        if (m_Connected) {}
 
         if (!gpio_get(9))
         {
             while (!gpio_get(9))
             {
-                // busy_wait_at_least_cycles(1);
                 vTaskDelay(1);
                 /* Loop while button is pressed */
             }
