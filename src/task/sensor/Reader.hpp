@@ -8,20 +8,27 @@
 #include <memory>
 #include <vector>
 
+namespace Task
+{
+
 namespace Sensor
 {
+
 class Reader : public Task::BaseTask
 {
   public:
-    Reader(uint32_t msUpdateRate = 250);
-    void attach(std::shared_ptr<Sensor::BaseSensor> sensor);
+    Reader();
+    void attach(std::shared_ptr<::Sensor::BaseSensor> sensor);
     void run() override;
 
   private:
-    uint32_t m_UpdateRate;
-    std::vector<std::shared_ptr<Sensor::BaseSensor>> m_Sensors;
+    uint32_t m_EventBits = 0;
+    std::vector<std::shared_ptr<::Sensor::BaseSensor>> m_Sensors;
     void update();
 };
+
 } // namespace Sensor
+
+} // namespace Task
 
 #endif /* READER_HPP */
