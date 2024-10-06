@@ -4,9 +4,6 @@
 
 #include "MbClient.hpp"
 
-#include "projdefs.h"
-#include "timer/Timeout.hpp"
-
 // #include "pico/time.h"
 
 namespace Modbus
@@ -59,7 +56,7 @@ int32_t Client::uart_transport_read(uint8_t *buf,
     // printf("flv=%u, bto=%d, cnt=%d, to=%u\n",flv,byte_timeout_ms,count, (uint) timeout);
     int32_t rcnt = 0;
     int32_t cnt = 0;
-    while (!s_RequestDelay.hasExpired()) { vTaskDelay(pdMS_TO_TICKS(1)); }
+    s_RequestDelay();
     do {
         // gpio_put(DBG_PIN1, true);
         cnt = uart->read(buf + rcnt, count - rcnt, timeout);
@@ -76,8 +73,7 @@ int32_t Client::uart_transport_write(const uint8_t *buf,
                                      int32_t byte_timeout_ms,
                                      void *arg)
 {
-    while (!s_RequestDelay.hasExpired()) { vTaskDelay(pdMS_TO_TICKS(1)); }
-    s_RequestDelay.reset();
+    s_RequestDelay();
     return static_cast<Uart::PicoOsUart *>(arg)->write(buf, count, byte_timeout_ms);
 }
 
