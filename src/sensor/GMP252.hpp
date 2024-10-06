@@ -20,8 +20,8 @@ class GMP252 : public BaseSensor
     void update() override;
 
   private:
-    float m_Co2;
-    float m_Temp;
+    float m_Co2 = 0;
+    float m_Temp = 0;
     Modbus::Register m_Co2Register;
     Modbus::Register m_TempRegister;
 };
