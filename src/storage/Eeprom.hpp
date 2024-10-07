@@ -27,8 +27,8 @@ class Eeprom
     Eeprom(std::shared_ptr<I2c::PicoI2C> i2c);
     bool write(eepromAddress address, const std::vector<uint8_t> &buffer);
     bool write(eepromAddress address, const std::string &buffer);
-    int read(eepromAddress address, std::vector<uint8_t> &buffer);
-    int read(eepromAddress address, std::string &buffer);
+    bool read(eepromAddress address, std::vector<uint8_t> &buffer);
+    bool read(eepromAddress address, std::string &buffer);
 
   private:
     const uint8_t m_DeviceAddress = 0x50;

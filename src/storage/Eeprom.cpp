@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <mutex>
 #include <vector>
 
@@ -43,7 +44,7 @@ bool Eeprom::write(eepromAddress address, const std::string &buffer)
     return write(address, temp);
 }
 
-int Eeprom::read(eepromAddress address, std::vector<uint8_t> &buffer)
+bool Eeprom::read(eepromAddress address, std::vector<uint8_t> &buffer)
 {
     std::lock_guard<Semaphore::Mutex> exclusive(access);
 
@@ -54,13 +55,15 @@ int Eeprom::read(eepromAddress address, std::vector<uint8_t> &buffer)
     std::vector<uint8_t> readAddress;
     uint16_t crc = readCrc(address);
 
-    buffer.reserve(READ_COUNT);
+    uint8_t temp[READ_COUNT];
     readAddress.push_back(static_cast<uint8_t>(address >> 8));
     readAddress.push_back(static_cast<uint8_t>(address));
 
     eepromWait();
+    count = m_I2c->write(m_DeviceAddress, readAddress.data(), 2);
+    count += m_I2c->read(m_DeviceAddress, temp, READ_COUNT);
 
-    count = m_I2c->transaction(m_DeviceAddress, readAddress.data(), 2, buffer.data(), READ_COUNT);
+    buffer.insert(buffer.begin(), temp, &temp[READ_COUNT]);
 
     auto endMark = std::find(buffer.begin(), buffer.end(), '\0'); // Find the end marker
     buffer.erase(endMark, buffer.end()); // Erase all extra data starting from the end marker
@@ -70,7 +73,7 @@ int Eeprom::read(eepromAddress address, std::vector<uint8_t> &buffer)
     return result;
 }
 
-int Eeprom::read(eepromAddress address, std::string &buffer)
+bool Eeprom::read(eepromAddress address, std::string &buffer)
 {
     std::vector<uint8_t> temp;
 
