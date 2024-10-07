@@ -7,6 +7,7 @@
 #include "timers.h"
 
 #include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -21,24 +22,24 @@ namespace Task
 namespace LocalUI
 {
 
-// MenuState currentState = MAIN_MENU;
-
 UI::UI(QueueHandle_t inputQueue,
        TaskHandle_t co2Controller,
        const std::shared_ptr<Modbus::Client> &modbusClient,
        const std::shared_ptr<I2c::PicoI2C> &i2c,
        const std::shared_ptr<Sensor::GMP252> &co2Sensor,
        const std::shared_ptr<Sensor::HMP60> &tempRhSensor,
-       const std::shared_ptr<Sensor::SDP600> &paSensor) :
+       const std::shared_ptr<Sensor::SDP600> &paSensor,
+       QueueHandle_t targetQueue,
+       QueueHandle_t settingsQueue) :
     BaseTask{"UserInterface", 512, this, MED},
     m_InputQueue{inputQueue},
-    m_Co2Controller{co2Controller},
+    m_TargetQueue{targetQueue},
+    m_SettingsQueue{settingsQueue},
     i2cBus{i2c},
     m_Co2Sensor{co2Sensor},
     m_RhSensor{tempRhSensor},
     m_PaSensor{paSensor}
 {
-    // readFromEEPROM(); // TODO: implement reading initial settings from EEPROM
     UI::updateDisplayFlag = false;
 }
 
@@ -155,6 +156,7 @@ void UI::displaySensorValues()
     }
     else
     {
+        xQueuePeek(m_TargetQueue, &m_Co2Target, 0);
         display->text(co2TargetNumber, co2TargetText.size() * FONT_SIZE, 0);
     }
     display->text("ppm", (co2TargetText.size() + co2TargetNumber.size()) * FONT_SIZE, 0);
@@ -247,7 +249,10 @@ void UI::displayWiFiSettings()
                 if (isSSIDInput) { isSSIDInput = false; }
                 else if (password.size() >= PASSWORD_MIN)
                 {
-                    // TODO: handle sending wifi credentials to network task
+                    m_NetSettings.wifi = true;
+                    strcpy(m_NetSettings.str1, ssid.c_str());
+                    strcpy(m_NetSettings.str2, password.c_str());
+                    xQueueSend(m_SettingsQueue, &m_NetSettings, 0);
                     m_State = MAIN_MENU;
                 }
             }
@@ -332,7 +337,10 @@ void UI::displayThingSpeakSettings()
                 }
                 else if (talkbackKey.size() == MAX_LINE_CHARS)
                 {
-                    // TODO: handle sending thingspeak credentials to network task
+                    m_NetSettings.wifi = false;
+                    strcpy(m_NetSettings.str1, apiKey.c_str());
+                    strcpy(m_NetSettings.str2, talkbackKey.c_str());
+                    xQueueSend(m_SettingsQueue, &m_NetSettings, 0);
                     m_State = MAIN_MENU;
                 }
             }
@@ -356,16 +364,21 @@ void UI::setCO2Target()
         {
             if (command == Gpio::ROT_A)
             {
-                m_Co2Target += 10; // Increment CO2 level
+                if (m_Co2Target + 10 <= 1500)
+                {
+                    m_Co2Target += 10; // Increment CO2 level
+                }
             }
             else if (command == Gpio::ROT_B)
             {
-                m_Co2Target -= 10; // Decrement CO2 level
+                if (m_Co2Target - 10 >= 0)
+                {
+                    m_Co2Target -= 10; // Decrement CO2 level
+                }
             }
             else if (command == Gpio::ROT_SW)
             {
-                xTaskNotify(m_Co2Controller, *(uint32_t *)&m_Co2Target, eSetValueWithOverwrite);
-                // saveToEEPROM(); // TODO: implement saving when the button is pressed
+                xQueueOverwrite(m_TargetQueue, &m_Co2Target);
                 m_Co2SetEnabled = false;
             }
         }
@@ -373,14 +386,6 @@ void UI::setCO2Target()
         else if (command == Gpio::SW0) { m_State = MAIN_MENU; }
     }
 }
-
-/*void UI::readFromEEPROM() {
-    // TODO: use EEPROM class
-}
-
-void UI::saveToEEPROM() {
-    // TODO: use EEPROM class
-}*/
 
 } // namespace LocalUI
 

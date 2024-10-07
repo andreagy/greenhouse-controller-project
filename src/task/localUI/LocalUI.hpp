@@ -1,8 +1,10 @@
 #ifndef LOCALUI_HPP
 #define LOCALUI_HPP
 
+#include "FreeRTOS.h" // IWYU pragma: keep
 #include "display/ssd1306os.h"
 #include "i2c/PicoI2C.hpp"
+#include "network/NetData.hpp"
 #include "queue.h"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
@@ -38,21 +40,26 @@ class UI : public BaseTask
        const std::shared_ptr<I2c::PicoI2C> &i2c,
        const std::shared_ptr<Sensor::GMP252> &co2Sensor,
        const std::shared_ptr<Sensor::HMP60> &tempRhSensor,
-       const std::shared_ptr<Sensor::SDP600> &paSensor);
+       const std::shared_ptr<Sensor::SDP600> &paSensor,
+       QueueHandle_t targetQueue,
+       QueueHandle_t settingsQueue);
     static bool updateDisplayFlag;
     void run() override;
 
   private:
-    uint32_t m_Co2Target = 900;
+    uint32_t m_Co2Target = 0;
     MenuState m_State = MAIN_MENU;
     bool m_Co2SetEnabled = false;
     QueueHandle_t m_InputQueue;
-    TaskHandle_t m_Co2Controller;
+    QueueHandle_t m_TargetQueue;
+    QueueHandle_t m_SettingsQueue;
     std::shared_ptr<I2c::PicoI2C> i2cBus;
     std::shared_ptr<ssd1306os> display;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
     std::shared_ptr<Sensor::HMP60> m_RhSensor;
     std::shared_ptr<Sensor::SDP600> m_PaSensor;
+    std::shared_ptr<Sensor::SDP600> m_Eeprom;
+    Network::Settings m_NetSettings;
     void initializeDisplay();
     void setCO2Target();
     void displayMenu();
