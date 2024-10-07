@@ -6,6 +6,7 @@
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
 #include "sensor/SDP600.hpp"
+#include "storage/Eeprom.hpp"
 #include "task.h"
 #include "task/co2/Co2Controller.hpp"
 #include "task/fan/FanController.hpp"
@@ -36,8 +37,9 @@ int main()
     // Create system objects
     auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600); // TODO: Add enums for accepted values
+    auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600);
     auto modbusClient = std::make_shared<Modbus::Client>(uart);
+    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0);
 
     // Create sensor objects
     auto co2Sensor = std::make_shared<Sensor::GMP252>(modbusClient);
@@ -45,22 +47,33 @@ int main()
     auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
     // Create queue for GPIO inputs
-    QueueHandle_t inputQueue = xQueueCreate(5, sizeof(Gpio::inputPin));
+    QueueHandle_t inputQueue = xQueueCreate(3, sizeof(Gpio::inputPin));
+    QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
+    QueueHandle_t settingsQueue = xQueueCreate(2, sizeof(Network::Settings));
 
     // Create task objects
     auto gpioInput = new Task::Gpio::Input(inputQueue);
     auto sensorReader = new Task::Sensor::Reader();
-    auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = new Task::Co2::Controller(co2Sensor,
-                                                   fanController->getHandle());
+    auto fanController = std::make_shared<Task::Fan::Controller>(modbusClient);
+    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor,
+                                                                 fanController->getHandle(),
+                                                                 targetQueue);
     auto localUI = new Task::LocalUI::UI(inputQueue,
                                          co2Controller->getHandle(),
                                          modbusClient,
                                          picoI2c1,
                                          co2Sensor,
                                          rhSensor,
-                                         paSensor);
-    auto netManager = new Task::Network::Manager();
+                                         paSensor,
+                                         targetQueue,
+                                         settingsQueue);
+    auto netManager = new Task::Network::Manager(co2Sensor,
+                                                 rhSensor,
+                                                 co2Controller,
+                                                 fanController,
+                                                 eeprom,
+                                                 targetQueue,
+                                                 settingsQueue);
 
     // Attach sensors to the reader
     sensorReader->attach(co2Sensor);
@@ -75,9 +88,7 @@ int main()
     // Delete task objects
     delete gpioInput;
     delete sensorReader;
-    delete fanController;
     delete localUI;
-    delete co2Controller;
     delete netManager;
 
     return 0;

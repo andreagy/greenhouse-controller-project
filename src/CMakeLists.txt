@@ -20,7 +20,7 @@ add_executable(${PROJECT_NAME}
         sensor/HMP60.cpp
         sensor/SDP600.cpp
 
-        # storage/Eeprom.cpp
+        storage/Eeprom.cpp
         task/BaseTask.cpp
         task/co2/Co2Controller.cpp
         task/fan/FanController.cpp
