@@ -7,6 +7,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <cstdio>
 
 namespace Task
 {
@@ -22,17 +23,19 @@ enum taskState
 };
 
 Controller::Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
-                       TaskHandle_t fanController) :
+                       TaskHandle_t fanController,
+                       QueueHandle_t targetQueue) :
     BaseTask{"CO2Controller", 256, this, HIGH},
     m_Co2Sensor{co2Sensor},
-    m_FanControlHandle{fanController}
+    m_FanControlHandle{fanController},
+    m_TargetQueue{targetQueue}
 {
     gpio_init(m_ValvePin);
     gpio_set_dir(m_ValvePin, GPIO_OUT);
     gpio_put(m_ValvePin, 0);
 }
 
-void Controller::setTarget(float target)
+void Controller::setTarget(uint32_t target)
 {
     if (target > m_Co2Max || target < m_Co2Min)
     {
@@ -54,14 +57,16 @@ void Controller::run()
     taskState state = NORMAL;
     uint32_t fanSpeed = 0;
     uint32_t receivedTarget = 0;
-    Timer::CounterTimeout valveTimeout(2000); // Maximum time the valve stays open // TODO: adjust with real system
-    Timer::CounterTimeout retryTimeout(5000); // Minimum time to wait between opening the valve
+    Timer::CounterTimeout valveTimeout(1500); // Maximum time the valve stays open // TODO: adjust with real system
+    Timer::CounterTimeout retryTimeout(45000); // Minimum time to wait between opening the valve
     Timer::CounterTimeout fanSpeedTimeout(1000); // Minimum time between fan speed adjusts
+
+    xQueueOverwrite(m_TargetQueue, &m_Co2Target); // TODO: get and set from eeprom
 
     while (true)
     {
         // Check for a new target
-        if (xTaskNotifyWait(0, ULONG_MAX, &receivedTarget, 0) == pdPASS)
+        if (xQueuePeek(m_TargetQueue, &receivedTarget, 0) == pdPASS)
         {
             setTarget(receivedTarget);
         }

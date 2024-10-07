@@ -15,7 +15,9 @@ namespace Co2
 class Controller : public BaseTask
 {
   public:
-    Controller(std::shared_ptr<Sensor::GMP252> co2Sensor, TaskHandle_t fanController);
+    Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
+               TaskHandle_t fanController,
+               QueueHandle_t targetQueue);
     float getTarget();
     void run() override;
 
@@ -23,10 +25,11 @@ class Controller : public BaseTask
     const uint m_ValvePin = 27;
     const float m_Co2Min = 200;
     const float m_Co2Max = 1500;
-    float m_Co2Target;
+    uint32_t m_Co2Target = 900;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
     TaskHandle_t m_FanControlHandle;
-    void setTarget(float target);
+    QueueHandle_t m_TargetQueue;
+    void setTarget(uint32_t target);
 };
 
 } // namespace Co2
