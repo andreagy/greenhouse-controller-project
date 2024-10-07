@@ -18,7 +18,7 @@ void CounterTimeout::reset() { m_Timestamp = xTaskGetTickCount(); }
 
 bool CounterTimeout::operator()()
 {
-    return xTaskGetTickCount() - m_Timestamp > pdMS_TO_TICKS(m_Timeout);
+    return (xTaskGetTickCount() - m_Timestamp) > pdMS_TO_TICKS(m_Timeout);
 }
 
 } // namespace Timer

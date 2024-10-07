@@ -1,6 +1,7 @@
 #ifndef COUNTERTIMEOUT_HPP
 #define COUNTERTIMEOUT_HPP
 
+#include "FreeRTOS.h" // IWYU pragma: keep
 #include "portmacro.h"
 
 #include <cstdint>
@@ -18,6 +19,7 @@ class CounterTimeout
   private:
     uint32_t m_Timeout;
     TickType_t m_Timestamp;
+    
 };
 
 } // namespace Timer
