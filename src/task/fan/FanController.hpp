@@ -26,7 +26,7 @@ class Controller : public BaseTask
     void run();
 
   private:
-    uint16_t m_Speed;
+    uint16_t m_Speed = 0;
     Modbus::Register m_SpeedRegister;
     Modbus::Register m_PulseRegister;
 };
