@@ -1,21 +1,23 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
-#include "gpio/Buttons.hpp"
-#include "gpio/RotaryEncoder.hpp"
+#include "gpio/GpioInput.hpp"
 #include "i2c/PicoI2C.hpp"
 #include "modbus/MbClient.hpp"
-#include "semphr.h"
+#include "queue.h"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
 #include "sensor/SDP600.hpp"
 #include "task.h"
 #include "task/co2/Co2Controller.hpp"
 #include "task/fan/FanController.hpp"
-#include "task/network/Manager.hpp"
+#include "task/gpio/Input.hpp"
 #include "task/localUI/LocalUI.hpp"
+#include "task/network/Manager.hpp"
+#include "task/sensor/Reader.hpp"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
 
+#include <cstdio>
 #include <memory>
 
 extern "C"
@@ -28,8 +30,6 @@ extern "C"
 
 int main()
 {
-    // Set system variables
-
     stdio_init_all();
     printf("\nBoot\n");
 
@@ -44,18 +44,28 @@ int main()
     auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
     auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
 
-    // Create queue for rotary encoder and buttons
-    QueueHandle_t rotaryQueue = xQueueCreate(5, sizeof(GPIO::encoderPin));
-    QueueHandle_t buttonQueue = xQueueCreate(5, sizeof(GPIO::buttonPin));
+    // Create queue for GPIO inputs
+    QueueHandle_t inputQueue = xQueueCreate(5, sizeof(Gpio::inputPin));
 
-    // Create task objects  
-    auto rotary = new GPIO::RotaryEncoder(rotaryQueue);
-    auto button = new GPIO::ButtonHandler(buttonQueue);
+    // Create task objects
+    auto gpioInput = new Task::Gpio::Input(inputQueue);
+    auto sensorReader = new Task::Sensor::Reader();
     auto fanController = new Task::Fan::Controller(modbusClient);
-    auto co2Controller = new Task::Co2::Controller(co2Sensor, fanController->getHandle());
-    auto localUI = new Task::LocalUI::UI(rotaryQueue, buttonQueue, modbusClient, co2Controller, picoI2c1, co2Sensor, rhSensor, paSensor);
+    auto co2Controller = new Task::Co2::Controller(co2Sensor,
+                                                   fanController->getHandle());
+    auto localUI = new Task::LocalUI::UI(inputQueue,
+                                         co2Controller->getHandle(),
+                                         modbusClient,
+                                         picoI2c1,
+                                         co2Sensor,
+                                         rhSensor,
+                                         paSensor);
     auto netManager = new Task::Network::Manager();
 
+    // Attach sensors to the reader
+    sensorReader->attach(co2Sensor);
+    sensorReader->attach(rhSensor);
+    sensorReader->attach(paSensor);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -63,8 +73,8 @@ int main()
     while (true) {};
 
     // Delete task objects
-    delete rotary;
-    delete button;
+    delete gpioInput;
+    delete sensorReader;
     delete fanController;
     delete localUI;
     delete co2Controller;
