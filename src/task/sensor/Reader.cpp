@@ -12,7 +12,7 @@ namespace Task
 namespace Sensor
 {
 
-Reader::Reader() : Task::BaseTask{"SensorReader", 256, this, HIGH} {}
+Reader::Reader() : Task::BaseTask{"SensorReader", 256, this, MED} {}
 
 void Reader::attach(std::shared_ptr<::Sensor::BaseSensor> sensor)
 {
