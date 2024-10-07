@@ -38,7 +38,8 @@ void Controller::setSpeed(uint16_t speed)
 void Controller::run()
 {
     uint32_t speed = 0;
-    // setSpeed(500);
+
+    setSpeed(0);
 
     while (true)
     {
