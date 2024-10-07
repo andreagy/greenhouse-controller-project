@@ -2,11 +2,11 @@
 
 #include "projdefs.h"
 #include "task/BaseTask.hpp"
-#include "timer/Timeout.hpp"
+#include "timer/CounterTimeout.hpp"
 #include <hardware/gpio.h>
 
-#include <cstdint>
 #include <climits>
+#include <cstdint>
 
 namespace Task
 {
@@ -16,9 +16,9 @@ namespace Co2
 
 enum taskState
 {
+    NORMAL,
     VALVE_OPEN,
-    VALVE_CLOSED,
-    CO2_CRITICAL
+    CRITICAL
 };
 
 Controller::Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
@@ -47,65 +47,65 @@ float Controller::getTarget() { return m_Co2Target; }
 void Controller::run()
 {
     constexpr uint16_t FAN_MIN = 150;
-    constexpr uint16_t FAN_MAX = 850;
-    constexpr float CRITICAL = 2000;
-    constexpr float CRITICAL_CONV = 500;
+    constexpr uint16_t FAN_MAX = 850; // Set to 1000 - FAN_MIN
+    constexpr float CO2_CRITICAL = 2000;
+    constexpr float CO2_CRITICAL_DIFF = 1000; // CRITICAL + DIFF => fan at max speed
 
-    taskState state = VALVE_CLOSED;
-    uint16_t pollInterval = 250;
+    taskState state = NORMAL;
     uint32_t fanSpeed = 0;
     uint32_t receivedTarget = 0;
-
-    // setTarget(900);
+    Timer::CounterTimeout valveTimeout(2000); // Maximum time the valve stays open // TODO: adjust with real system
+    Timer::CounterTimeout retryTimeout(5000); // Minimum time to wait between opening the valve
+    Timer::CounterTimeout fanSpeedTimeout(1000); // Minimum time between fan speed adjusts
 
     while (true)
-    {   // Wait for new target CO2 level from localUI
-        if (xTaskNotifyWait(0, ULONG_MAX, &receivedTarget, 0) == pdPASS) {
-            setTarget(*(float*)&receivedTarget);
+    {
+        // Check for a new target
+        if (xTaskNotifyWait(0, ULONG_MAX, &receivedTarget, 0) == pdPASS)
+        {
+            setTarget(receivedTarget);
         }
-
-        pollSensor(pollInterval);
 
         switch (state)
         {
-            case VALVE_CLOSED:
-                if (m_Co2Sensor->getCo2() > CRITICAL) { state = CO2_CRITICAL; }
-                if (m_Co2Sensor->getCo2() < (m_Co2Target - 25))
+            case NORMAL:
+                if (m_Co2Sensor->getCo2() > CO2_CRITICAL) { state = CRITICAL; }
+                if (m_Co2Sensor->getCo2() < (m_Co2Target - 50)
+                    && retryTimeout()) // TODO: fine tune with real system
                 {
                     gpio_put(m_ValvePin, 1);
-                    pollInterval = 25;
                     state = VALVE_OPEN;
+                    valveTimeout.reset();
                 }
                 break;
             case VALVE_OPEN:
-                if (m_Co2Sensor->getCo2() >= m_Co2Target)
+                if (m_Co2Sensor->getCo2() >= m_Co2Target || valveTimeout())
                 {
                     gpio_put(m_ValvePin, 0);
-                    pollInterval = 250;
-                    state = VALVE_CLOSED;
+                    state = NORMAL;
+                    retryTimeout.reset();
                 }
                 break;
-            case CO2_CRITICAL:
-                fanSpeed = (FAN_MAX * ((m_Co2Sensor->getCo2() - CRITICAL) / CRITICAL_CONV))
-                           + FAN_MIN; // Calculate fan speed based on CO2 value (15% - 100% at 2000 - 2500)
-                xTaskNotify(m_FanControlHandle, fanSpeed, eSetValueWithOverwrite);
+            case CRITICAL:
+                if (fanSpeedTimeout())
+                {
+                    fanSpeed = (FAN_MAX * ((m_Co2Sensor->getCo2() - CO2_CRITICAL) / CO2_CRITICAL_DIFF))
+                               + FAN_MIN; // Calculate fan speed based on CO2 value (15% - 100% at 2000 - 3000)
+                    xTaskNotify(m_FanControlHandle, fanSpeed, eSetValueWithOverwrite);
+                    fanSpeedTimeout.reset();
+                }
 
-                if (m_Co2Sensor->getCo2() < CRITICAL)
+                if (m_Co2Sensor->getCo2() < CO2_CRITICAL)
                 {
                     xTaskNotify(m_FanControlHandle, 0, eSetValueWithOverwrite);
-                    state = VALVE_CLOSED;
+                    state = NORMAL;
                 }
                 break;
             default:
                 break;
         }
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
-}
-
-void Controller::pollSensor(uint16_t interval)
-{
-    m_Co2Sensor->update();
-    vTaskDelay(pdMS_TO_TICKS(interval));
 }
 
 } // namespace Co2

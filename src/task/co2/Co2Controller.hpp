@@ -3,9 +3,7 @@
 
 #include "sensor/GMP252.hpp"
 #include "task/BaseTask.hpp"
-#include "timer/Timeout.hpp"
 
-#include <cstdint>
 #include <memory>
 
 namespace Task
@@ -18,7 +16,6 @@ class Controller : public BaseTask
 {
   public:
     Controller(std::shared_ptr<Sensor::GMP252> co2Sensor, TaskHandle_t fanController);
-    void setTarget(float target);
     float getTarget();
     void run() override;
 
@@ -28,8 +25,8 @@ class Controller : public BaseTask
     const float m_Co2Max = 1500;
     float m_Co2Target;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    void pollSensor(uint16_t interval);
     TaskHandle_t m_FanControlHandle;
+    void setTarget(float target);
 };
 
 } // namespace Co2
