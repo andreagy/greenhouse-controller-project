@@ -53,8 +53,6 @@ class UI : public BaseTask
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
     std::shared_ptr<Sensor::HMP60> m_RhSensor;
     std::shared_ptr<Sensor::SDP600> m_PaSensor;
-    std::string ssid;
-    std::string password;
     void initializeDisplay();
     void setCO2Target();
     void displayMenu();
