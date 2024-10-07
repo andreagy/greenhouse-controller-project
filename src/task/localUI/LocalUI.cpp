@@ -168,7 +168,7 @@ void UI::displaySensorValues()
 void UI::displayWiFiSettings()
 {
     constexpr uint8_t MAX_LINE_CHARS = 16;
-    constexpr uint8_t SSID_MAX = 32;
+    constexpr uint8_t SSID_MAX = 31;
     constexpr uint16_t PASSWORD_MIN = 8;
     constexpr uint16_t PASSWORD_MAX = 63;
 
@@ -195,7 +195,7 @@ void UI::displayWiFiSettings()
         else
         {
             display->text("Enter Password:", 0, 0);
-            if (ssid.size() > MAX_LINE_CHARS)
+            if (password.size() > MAX_LINE_CHARS)
             {
                 display->rect(0, 10, 8 * MAX_LINE_CHARS, 8, 0);
                 display->text(password.substr(password.size() - MAX_LINE_CHARS), 0, 10);
@@ -244,14 +244,10 @@ void UI::displayWiFiSettings()
 
             else if (command == Gpio::SW2)
             {
-                if (isSSIDInput)
-                {
-                    // TODO: handle sending SSID to network task
-                    isSSIDInput = false;
-                }
+                if (isSSIDInput) { isSSIDInput = false; }
                 else if (password.size() >= PASSWORD_MIN)
                 {
-                    // TODO: handle sending password to network task
+                    // TODO: handle sending wifi credentials to network task
                     m_State = MAIN_MENU;
                 }
             }
@@ -262,24 +258,7 @@ void UI::displayWiFiSettings()
                 m_State = MAIN_MENU;
             }
         }
-
-        // Switch from SSID to Password entry after max SSID length
-        // if (ssid.length() >= SSID_MAX && isSSIDInput)
-        // {
-        //     // TODO: handle sending SSID to network task
-        //     isSSIDInput = false;
-        // }
-
-        // // Break out of the loop when the password is fully entered
-        // if (!isSSIDInput && password.length() >= maxPasswordSize)
-        // {
-        //     // TODO: handle sending password to network task
-        //     break;
-        // }
     }
-
-    // After entering both SSID and password, display sensor values
-    // m_State = SENSOR_VALUES;
 }
 
 void UI::displayThingSpeakSettings()
