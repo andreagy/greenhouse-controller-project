@@ -6,13 +6,8 @@ add_executable(${PROJECT_NAME}
         display/mono_vlsb.cpp
         display/ssd1306os.cpp
 
-        gpio/RotaryEncoder.cpp
-
         i2c/PicoI2C.cpp
 
-        # ipstack/IPStack.cpp
-        # ipstack/picow_tls_client.c
-        # ipstack/tls_common.c
         modbus/MbClient.cpp
         modbus/Register.cpp
 
@@ -29,16 +24,15 @@ add_executable(${PROJECT_NAME}
         task/BaseTask.cpp
         task/co2/Co2Controller.cpp
         task/fan/FanController.cpp
+        task/gpio/Input.cpp
+        task/localUI/LocalUI.cpp
         task/network/Manager.cpp
+        task/sensor/Reader.cpp
 
-        timer/Timeout.cpp
+        timer/CounterTimeout.cpp
+        timer/DelayTimeout.cpp
 
         uart/PicoOsUart.cpp
-
-        TestTask.cpp
-        task/localUI/localUI.cpp
-        gpio/Buttons.hpp
-        gpio/Buttons.cpp
 )
 
 # Include directories
