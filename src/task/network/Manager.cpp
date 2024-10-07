@@ -1,6 +1,7 @@
 #include "Manager.hpp"
 
 #include "network/TlsClient.hpp"
+#include "portmacro.h"
 #include "task/BaseTask.hpp"
 #include <cyw43_ll.h>
 #include <hardware/gpio.h>
@@ -36,8 +37,6 @@ Manager::Manager() : BaseTask{"NetworkClient", 1024, this, MED} {}
 
 void Manager::run()
 {
-    ::Network::Client tlsClient(30);
-
     // TODO: get wifi settings from eeprom or environment
     if (m_Ssid.empty()) { m_Ssid = WIFI_SSID; }
     if (m_Password.empty()) { m_Password = WIFI_PASSWORD; }
@@ -45,12 +44,15 @@ void Manager::run()
     int err = connect();
 
     if (err == 0) { m_Connected = true; }
+    ::Network::Client tlsClient(30);
 
     while (true)
     {
         // TODO: handle sending thingspeak
 
         // TODO: handle getting command from talkback -> send direct notify to co2 control
+
+        vTaskDelay(portMAX_DELAY);
     }
 }
 
