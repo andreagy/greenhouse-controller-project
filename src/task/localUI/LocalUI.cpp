@@ -263,12 +263,87 @@ void UI::displayWiFiSettings()
 
 void UI::displayThingSpeakSettings()
 {
-    // TODO: implement
-    display->fill(0);
-    display->text("Work in progress", 0, 20);
-    display->show();
+    constexpr uint8_t MAX_LINE_CHARS = 16;
 
-    vTaskDelay(3000);
+    int charIndex = 0;
+
+    std::string apiKey, talkbackKey;
+    bool isApiInput = true; // Flag for api or talkback key input
+
+    while (m_State == THINGSPEAK_SETTINGS)
+    {
+        display->fill(0); // Clear the display
+
+        if (isApiInput)
+        {
+            display->text("API key:", 0, 0);
+            display->text(apiKey, 0, 10);
+        }
+        else
+        {
+            display->text("Talkback key:", 0, 0);
+            display->text(talkbackKey, 0, 10);
+        }
+
+        // Display current character selection
+        display->text("Char: " + std::string(1, characterSet[charIndex]), 0, 20);
+        display->text("Press to select", 0, 40);
+        display->show();
+
+        Gpio::inputPin command;
+
+        if (xQueueReceive(m_InputQueue, &command, pdMS_TO_TICKS(100)) == pdPASS)
+        {
+            if (command == Gpio::ROT_A)
+            {
+                charIndex = (charIndex + 1) % characterSet.size();
+            }
+            else if (command == Gpio::ROT_B)
+            {
+                charIndex = (charIndex - 1 + characterSet.size())
+                            % characterSet.size();
+            }
+            else if (command == Gpio::ROT_SW)
+            {
+                if (isApiInput && apiKey.length() < MAX_LINE_CHARS)
+                {
+                    apiKey += characterSet[charIndex];
+                }
+                else if (!isApiInput && talkbackKey.length() < MAX_LINE_CHARS)
+                {
+                    talkbackKey += characterSet[charIndex];
+                }
+            }
+            else if (command == Gpio::SW1)
+            {
+                // Delete last character from SSID or Password
+                if (isApiInput && !apiKey.empty()) { apiKey.pop_back(); }
+                else if (!isApiInput && !talkbackKey.empty())
+                {
+                    talkbackKey.pop_back();
+                }
+            }
+
+            else if (command == Gpio::SW2)
+            {
+                if (isApiInput && apiKey.size() == MAX_LINE_CHARS)
+                {
+                    isApiInput = false;
+                }
+                else if (talkbackKey.size() == MAX_LINE_CHARS)
+                {
+                    // TODO: handle sending thingspeak credentials to network task
+                    m_State = MAIN_MENU;
+                }
+            }
+            else if (command == Gpio::SW0)
+            {
+                apiKey.clear();
+                talkbackKey.clear();
+                m_State = MAIN_MENU;
+            }
+        }
+    }
 }
 
 void UI::setCO2Target()
