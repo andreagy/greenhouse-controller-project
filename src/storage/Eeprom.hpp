@@ -1,35 +1,46 @@
 #ifndef EEPROM_HPP
 #define EEPROM_HPP
 
-#include "I2CHandler.h"
+#include "i2c/PicoI2C.hpp"
+#include "semaphore/Mutex.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
-
-#define EEPROM_REG_NETWORK_ID 0x00
-#define EEPROM_REG_NETWORK_PW 0x40
-#define EEPROM_REG_BROKER_IP 0x80
-#define EEPROM_REG_MODE 0xC0
-#define EEPROM_REG_TAR_PRES 0x100
-#define EEPROM_REG_TAR_FAN 0x140
+#include <vector>
 
 namespace Storage
 {
 
+enum eepromAddress : uint16_t
+{
+    CO2_TARGET_ADDR = 0x00,
+    API_KEY_ADDR = 0x40,
+    TALKBACK_KEY_ADDR = 0x80,
+    SSID_ADDR = 0xC0,
+    PASSWORD_ADDR = 0x100,
+};
+
 class Eeprom
 {
-  private:
-    const int mI2CBusNumber = 0;
-    const uint8_t mI2CDeviceAddress = 0x50;
-    uint8_t mCurrentReadWriteAddress[2];
-    std::shared_ptr<I2CHandler> mI2CHandler;
-    void mSetReadWriteAddress(const uint16_t readWriteAddress);
-    void mWaitUntilReady();
-
   public:
-    Eeprom(std::shared_ptr<I2CHandler> i2cHandler);
-    void write(const uint16_t readWriteAddress, const std::string &writeBuffer);
-    std::string read(const uint16_t readWriteAddress);
+    Eeprom(std::shared_ptr<I2c::PicoI2C> i2c);
+    bool write(eepromAddress address, const std::vector<uint8_t> &buffer);
+    bool write(eepromAddress address, const std::string &buffer);
+    int read(eepromAddress address, std::vector<uint8_t> &buffer);
+    int read(eepromAddress address, std::string &buffer);
+
+  private:
+    const uint8_t m_DeviceAddress = 0x50;
+    Semaphore::Mutex access;
+    std::shared_ptr<I2c::PicoI2C> m_I2c;
+    std::vector<uint16_t> m_CrcTable;
+    void initCrc();
+    uint16_t calcCrc(const std::vector<uint8_t> &message);
+    bool checkCrc(const std::vector<uint8_t> &message, uint16_t crc);
+    void writeCrc(eepromAddress address, uint16_t crc);
+    uint16_t readCrc(eepromAddress address);
+    void eepromWait();
 };
 
 } // namespace Storage
