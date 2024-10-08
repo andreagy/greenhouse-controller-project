@@ -133,7 +133,7 @@ std::string Manager::createRequest(const ::Network::Data &data)
                           + "&field1=" + std::to_string(data.co2)
                           + "&field2=" + std::to_string(data.rh)
                           + "&field3=" + std::to_string(data.temp)
-                          + "&field4=" + std::to_string(data.speed)
+                          + "&field4=" + std::to_string(data.speed / 10)
                           + "&field5=" + std::to_string(data.target);
     request += std::to_string(content.size()) + ::Network::Request::headerEnd + content;
 
