@@ -15,10 +15,11 @@ namespace Storage
 enum eepromAddress : uint16_t
 {
     CO2_TARGET_ADDR = 0x00,
-    API_KEY_ADDR = 0x40,
-    TALKBACK_KEY_ADDR = 0x80,
-    SSID_ADDR = 0xC0,
-    PASSWORD_ADDR = 0x100,
+    SSID_ADDR = 0x40,
+    PASSWORD_ADDR = 0x80,
+    API_KEY_ADDR = 0xC0,
+    TALKBACK_ID_ADDR = 0x100,
+    TALKBACK_KEY_ADDR = 0x140,
 };
 
 class Eeprom
