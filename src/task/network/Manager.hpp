@@ -35,6 +35,7 @@ class Manager : public BaseTask
     std::string m_Ssid;
     std::string m_Password;
     std::string m_ApiKey;
+    std::string m_TalkbackId;
     std::string m_TalkbackKey;
     ::Network::Data m_Data;
     std::shared_ptr<::Network::Client> m_TlsClient;

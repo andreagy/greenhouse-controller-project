@@ -53,6 +53,11 @@ void Manager::run()
     {
         m_ApiKey = CHANNEL_API_KEY;
     }
+    if (!m_Eeprom->read(Storage::TALKBACK_ID_ADDR, m_TalkbackId)
+        || m_TalkbackId.empty())
+    {
+        m_TalkbackKey = TALKBACK_ID;
+    }
     if (!m_Eeprom->read(Storage::TALKBACK_KEY_ADDR, m_TalkbackKey)
         || m_TalkbackKey.empty())
     {
@@ -62,6 +67,16 @@ void Manager::run()
     int err = connect();
 
     if (err == 0) { m_Connected = true; }
+    else
+    {
+        m_Ssid = WIFI_SSID;
+        m_Password = WIFI_PASSWORD;
+        m_ApiKey = CHANNEL_API_KEY;
+        m_TalkbackKey = TALKBACK_ID;
+        m_TalkbackKey = TALKBACK_API_KEY;
+
+        if (connect() == 0) { m_Connected = true; }
+    }
     m_TlsClient = std::make_shared<::Network::Client>(30, m_TargetQueue);
 
     while (true)
@@ -103,6 +118,7 @@ int Manager::connect()
         m_Eeprom->write(Storage::SSID_ADDR, m_Ssid);
         m_Eeprom->write(Storage::PASSWORD_ADDR, m_Password);
         m_Eeprom->write(Storage::API_KEY_ADDR, m_ApiKey);
+        m_Eeprom->write(Storage::TALKBACK_ID_ADDR, m_TalkbackId);
         m_Eeprom->write(Storage::TALKBACK_KEY_ADDR, m_TalkbackKey);
     }
 
