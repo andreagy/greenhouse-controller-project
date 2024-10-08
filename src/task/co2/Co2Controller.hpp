@@ -2,6 +2,7 @@
 #define CO2CONTROLLER_HPP
 
 #include "sensor/GMP252.hpp"
+#include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 
 #include <memory>
@@ -17,7 +18,8 @@ class Controller : public BaseTask
   public:
     Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
                TaskHandle_t fanController,
-               QueueHandle_t targetQueue);
+               QueueHandle_t targetQueue,
+               std::shared_ptr<Storage::Eeprom> eeprom);
     float getTarget();
     void run() override;
 
@@ -29,6 +31,7 @@ class Controller : public BaseTask
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
     TaskHandle_t m_FanControlHandle;
     QueueHandle_t m_TargetQueue;
+    std::shared_ptr<Storage::Eeprom> m_Eeprom;
     void setTarget(uint32_t target);
 };
 

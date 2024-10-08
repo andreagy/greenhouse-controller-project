@@ -1,6 +1,7 @@
 #include "Co2Controller.hpp"
 
 #include "projdefs.h"
+#include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 #include "timer/CounterTimeout.hpp"
 #include <hardware/gpio.h>
@@ -8,6 +9,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstdio>
+#include <vector>
 
 namespace Task
 {
@@ -24,11 +26,13 @@ enum taskState
 
 Controller::Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
                        TaskHandle_t fanController,
-                       QueueHandle_t targetQueue) :
+                       QueueHandle_t targetQueue,
+                       std::shared_ptr<Storage::Eeprom> eeprom) :
     BaseTask{"CO2Controller", 256, this, HIGH},
     m_Co2Sensor{co2Sensor},
     m_FanControlHandle{fanController},
-    m_TargetQueue{targetQueue}
+    m_TargetQueue{targetQueue},
+    m_Eeprom{eeprom}
 {
     gpio_init(m_ValvePin);
     gpio_set_dir(m_ValvePin, GPIO_OUT);
@@ -43,6 +47,12 @@ void Controller::setTarget(uint32_t target)
     }
 
     m_Co2Target = target;
+    // std::vector<uint8_t> co2Target = {static_cast<uint8_t>(m_Co2Target >> 8),
+    //                                   static_cast<uint8_t>(m_Co2Target)};
+
+    m_Eeprom->write(Storage::CO2_TARGET_ADDR,
+                    std::vector<uint8_t>{static_cast<uint8_t>(m_Co2Target >> 8),
+                                         static_cast<uint8_t>(m_Co2Target)});
 }
 
 float Controller::getTarget() { return m_Co2Target; }
@@ -57,11 +67,17 @@ void Controller::run()
     taskState state = NORMAL;
     uint32_t fanSpeed = 0;
     uint32_t receivedTarget = 0;
-    Timer::CounterTimeout valveTimeout(1500); // Maximum time the valve stays open // TODO: adjust with real system
+    Timer::CounterTimeout valveTimeout(1500); // Maximum time the valve stays open
     Timer::CounterTimeout retryTimeout(45000); // Minimum time to wait between opening the valve
     Timer::CounterTimeout fanSpeedTimeout(1000); // Minimum time between fan speed adjusts
 
-    xQueueOverwrite(m_TargetQueue, &m_Co2Target); // TODO: get and set from eeprom
+    std::vector<uint8_t> buffer;
+
+    if (m_Eeprom->read(Storage::CO2_TARGET_ADDR, buffer))
+    {
+        m_Co2Target = buffer[0] << 8 | buffer[1];
+    }
+    xQueueOverwrite(m_TargetQueue, &m_Co2Target);
 
     while (true)
     {
