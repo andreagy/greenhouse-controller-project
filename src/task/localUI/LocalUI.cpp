@@ -368,13 +368,15 @@ void UI::setCO2Target()
                 {
                     m_Co2Target += 10; // Increment CO2 level
                 }
+                else { m_Co2Target = 1500; }
             }
             else if (command == Gpio::ROT_B)
             {
-                if (m_Co2Target - 10 >= 0)
+                if ((m_Co2Target - 10) >= 0)
                 {
                     m_Co2Target -= 10; // Decrement CO2 level
                 }
+                else { m_Co2Target = 0; }
             }
             else if (command == Gpio::ROT_SW)
             {
