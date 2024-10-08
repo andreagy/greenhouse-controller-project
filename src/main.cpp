@@ -39,8 +39,9 @@ int main()
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
     auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600);
     auto modbusClient = std::make_shared<Modbus::Client>(uart);
-    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0);
+    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0); // TODO: eeprom task with queue for saving data?
 
+    // TODO: get rid of sensor object, handle all in sensor reader task
     // Create sensor objects
     auto co2Sensor = std::make_shared<Sensor::GMP252>(modbusClient);
     auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
@@ -51,13 +52,15 @@ int main()
     QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
     QueueHandle_t settingsQueue = xQueueCreate(2, sizeof(Network::Settings));
 
-    // Create task objects
+    // TODO: clean up task dependencies, use more queues for task-to-task
+    // communication Create task objects
     auto gpioInput = new Task::Gpio::Input(inputQueue);
     auto sensorReader = new Task::Sensor::Reader();
     auto fanController = std::make_shared<Task::Fan::Controller>(modbusClient);
     auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor,
                                                                  fanController->getHandle(),
-                                                                 targetQueue);
+                                                                 targetQueue,
+                                                                 eeprom);
     auto localUI = new Task::LocalUI::UI(inputQueue,
                                          co2Controller->getHandle(),
                                          modbusClient,

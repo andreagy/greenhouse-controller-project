@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <cstring>
 
+// TODO: read response and get HTTP status code, handle errors (if status not 200, probably wrong api settings?)
+
 namespace Network
 {
 

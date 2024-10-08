@@ -50,6 +50,7 @@ void UI::initializeDisplay()
     display->show();
 }
 
+// TODO: leave main menu in this object, separate rest into child objects that handle each screen
 void UI::run()
 {
     Timer::DelayTimeout updateTimeout(40);
@@ -212,6 +213,7 @@ void UI::displayWiFiSettings()
 
         Gpio::inputPin command;
 
+        // TODO: handle all button receives in child objects and with switch-case
         if (xQueueReceive(m_InputQueue, &command, pdMS_TO_TICKS(100)) == pdPASS)
         {
             if (command == Gpio::ROT_A)
@@ -266,6 +268,7 @@ void UI::displayWiFiSettings()
     }
 }
 
+// TODO: add ability to set the talkback id from UI
 void UI::displayThingSpeakSettings()
 {
     constexpr uint8_t MAX_LINE_CHARS = 16;
