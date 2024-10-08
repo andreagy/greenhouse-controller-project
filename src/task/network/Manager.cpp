@@ -32,7 +32,7 @@ Manager::Manager(std::shared_ptr<Sensor::GMP252> co2Sensor,
     m_Co2Controller{co2Controller},
     m_FanController{fanController},
     m_Eeprom{eeprom},
-    m_ReportTimeout{15000},
+    m_ReportTimeout{25000},
     m_TargetQueue{targetQueue},
     m_SettingsQueue{settingsQueue}
 {
