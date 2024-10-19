@@ -24,6 +24,9 @@
   },
   "cmake.configureEnvironment": {
     "WIFI_SSID": "",
-    "WIFI_PASSWORD": ""
+    "WIFI_PASSWORD": "",
+    "CHANNEL_API_KEY": "",
+    "TALKBACK_ID" :"",
+    "TALKBACK_API_KEY": ""
   }
 }

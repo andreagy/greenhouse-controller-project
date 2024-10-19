@@ -2,17 +2,23 @@
 
 #include <lwip/altcp.h>
 #include <lwip/dns.h>
+#include <mbedtls/ssl.h>
 #include <pico/cyw43_arch.h>
 
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
+
+// TODO: read response and get HTTP status code, handle errors (if status not 200, probably wrong api settings?)
 
 namespace Network
 {
 
-Client::Client(uint8_t timeout, const uint8_t *cert, size_t cert_len) :
-    m_Timeout{timeout}
+Client::Client(uint8_t timeout, QueueHandle_t targetQueue, const uint8_t *cert, size_t cert_len) :
+    m_Timeout{timeout},
+    m_TargetQueue{targetQueue}
 {
-    m_Config = altcp_tls_create_config_client(cert, cert_len); // <-- debug issue here
+    m_Config = altcp_tls_create_config_client(cert, cert_len);
     assert(m_Config);
 
     mbedtls_ssl_conf_authmode((mbedtls_ssl_config *)m_Config,
@@ -33,6 +39,16 @@ int Client::getError() const { return m_Error; }
 void Client::setError(int Error) { m_Error = Error; }
 
 std::string Client::getRequest() const { return m_Request; }
+
+void Client::parseResponse(const char *buffer, uint8_t count)
+{
+    const char *target = strstr(buffer, "target=");
+    if (target != NULL)
+    {
+        sscanf(target, "target=%u", &m_Target);
+        xQueueOverwrite(m_TargetQueue, &m_Target);
+    }
+}
 
 altcp_pcb *Client::getPcb() const { return m_Pcb; }
 
@@ -136,7 +152,7 @@ err_t Client::tlsConnected(void *arg, struct altcp_pcb *pcb, err_t err)
 
     err = altcp_write(client->getPcb(),
                       (client->getRequest()).c_str(),
-                      strlen((client->getRequest()).c_str()),
+                      (client->getRequest()).size(),
                       TCP_WRITE_FLAG_COPY);
 
     if (err != ERR_OK)
@@ -170,7 +186,8 @@ err_t Client::tlsReceive(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t
         pbuf_copy_partial(p, buf, p->tot_len, 0);
         buf[p->tot_len] = 0;
 
-        printf("***\nnew data received from server:\n***\n\n%s\n", buf);
+        // printf("***\nnew data received from server:\n***\n\n%s\n", buf);
+        client->parseResponse(buf, p->tot_len);
         free(buf);
 
         altcp_recved(pcb, p->tot_len);

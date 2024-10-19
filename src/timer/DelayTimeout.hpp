@@ -2,25 +2,24 @@
 #define TIMEOUT_HPP
 
 #include "FreeRTOS.h" // IWYU pragma: keep
+#include "portmacro.h"
 #include "timers.h"
 
 #include <cstdint>
-#include <string>
 
 namespace Timer
 {
 
-class Timeout
+class DelayTimeout
 {
   public:
-    Timeout(uint32_t ms);
+    DelayTimeout(uint32_t ms);
     void reset();
-    bool hasExpired();
+    bool operator()();
 
   private:
-    const std::string m_Name = "Timeout";
-    TimerHandle_t m_Timer;
-    static void callback(TimerHandle_t timer);
+    uint32_t m_Timeout;
+    TickType_t m_LastTrigger;
 };
 
 } // namespace Timer

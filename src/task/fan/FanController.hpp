@@ -16,9 +16,7 @@ namespace Fan
 class Controller : public BaseTask
 {
   public:
-    Controller(std::shared_ptr<Modbus::Client> modbus,
-               uint32_t stackDepth = 256,
-               priority taskPriority = Task::HIGH);
+    Controller(std::shared_ptr<Modbus::Client> modbus);
     Controller(const Controller &) = delete;
     uint16_t getPulse();
     uint16_t getSpeed();
@@ -26,7 +24,7 @@ class Controller : public BaseTask
     void run();
 
   private:
-    uint16_t m_Speed;
+    uint16_t m_Speed = 0;
     Modbus::Register m_SpeedRegister;
     Modbus::Register m_PulseRegister;
 };

@@ -1,10 +1,13 @@
 #ifndef TLSCLIENT_HPP
 #define TLSCLIENT_HPP
 
+#include "FreeRTOS.h" // IWYU pragma: keep
+#include "queue.h"
 #include <lwip/altcp_tls.h>
 #include <lwip/err.h>
 #include <lwip/ip_addr.h>
 
+#include <cstdint>
 #include <string>
 
 namespace Network
@@ -13,13 +16,17 @@ namespace Network
 class Client
 {
   public:
-    Client(uint8_t timeout, const uint8_t *cert = NULL, size_t cert_len = 0);
+    Client(uint8_t timeout,
+           QueueHandle_t targetQueue,
+           const uint8_t *cert = NULL,
+           size_t cert_len = 0);
     ~Client();
     bool send(const std::string &request);
     int getError() const;
     void setError(int Error);
     void setTimeout(int timeout);
     std::string getRequest() const;
+    void parseResponse(const char *buffer, uint8_t count);
     altcp_pcb *getPcb() const;
 
   private:
@@ -28,8 +35,10 @@ class Client
     int m_Error;
     uint8_t m_Timeout;
     std::string m_Request;
+    uint32_t m_Target = 0;
     altcp_pcb *m_Pcb;
     altcp_tls_config *m_Config;
+    QueueHandle_t m_TargetQueue;
     bool open();
     void connect(const ip_addr_t *ipaddr);
     err_t close();

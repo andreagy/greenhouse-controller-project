@@ -2,10 +2,9 @@
 #define CO2CONTROLLER_HPP
 
 #include "sensor/GMP252.hpp"
+#include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
-#include "timer/Timeout.hpp"
 
-#include <cstdint>
 #include <memory>
 
 namespace Task
@@ -17,8 +16,10 @@ namespace Co2
 class Controller : public BaseTask
 {
   public:
-    Controller(std::shared_ptr<Sensor::GMP252> co2Sensor, TaskHandle_t fanController);
-    void setTarget(float target);
+    Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
+               TaskHandle_t fanController,
+               QueueHandle_t targetQueue,
+               std::shared_ptr<Storage::Eeprom> eeprom);
     float getTarget();
     void run() override;
 
@@ -26,10 +27,12 @@ class Controller : public BaseTask
     const uint m_ValvePin = 27;
     const float m_Co2Min = 200;
     const float m_Co2Max = 1500;
-    float m_Co2Target;
+    uint32_t m_Co2Target = 900;
     std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    void pollSensor(uint16_t interval);
     TaskHandle_t m_FanControlHandle;
+    QueueHandle_t m_TargetQueue;
+    std::shared_ptr<Storage::Eeprom> m_Eeprom;
+    void setTarget(uint32_t target);
 };
 
 } // namespace Co2

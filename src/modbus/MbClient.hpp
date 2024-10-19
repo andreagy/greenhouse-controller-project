@@ -7,7 +7,7 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "nanomodbus/nanomodbus.h"
-#include "timer/Timeout.hpp"
+#include "timer/DelayTimeout.hpp"
 #include "uart/PicoOsUart.hpp"
 
 #include <memory>
@@ -54,7 +54,7 @@ class Client
     std::shared_ptr<Uart::PicoOsUart> uart;
     nmbs_platform_conf platform_conf;
     nmbs_t nmbs;
-    inline static Timer::Timeout s_RequestDelay{5};
+    inline static Timer::DelayTimeout s_RequestDelay{5};
 };
 
 } // namespace Modbus

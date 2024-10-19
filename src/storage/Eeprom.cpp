@@ -1,78 +1,176 @@
 #include "Eeprom.hpp"
 
+#include "projdefs.h"
+#include "semaphore/Mutex.hpp"
+
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
+#include <mutex>
+#include <vector>
+
 namespace Storage
 {
 
-Eeprom::Eeprom(std::shared_ptr<I2CHandler> i2cHandler) :
-    mCurrentReadWriteAddress{0},
-    mI2CHandler{i2cHandler}
-{}
+Eeprom::Eeprom(std::shared_ptr<I2c::PicoI2C> i2c) : m_I2c{i2c} { initCrc(); }
+
+bool Eeprom::write(eepromAddress address, const std::vector<uint8_t> &buffer)
+{
+    std::lock_guard<Semaphore::Mutex> exclusive(access);
+    bool result = false;
+    uint count = 0;
+    std::vector<uint8_t> tempBuffer;
+    uint16_t crc = calcCrc(buffer);
+
+    tempBuffer.push_back(static_cast<uint8_t>(address >> 8));
+    tempBuffer.push_back(static_cast<uint8_t>(address));
+    tempBuffer.insert(tempBuffer.end(), buffer.begin(), buffer.end());
+    tempBuffer.push_back('\0'); // Add an end marker to find the end of the string on read
+
+    eepromWait();
+
+    count = m_I2c->write(m_DeviceAddress, tempBuffer.data(), tempBuffer.size());
+    result = count == tempBuffer.size() && checkCrc(buffer, crc);
+
+    writeCrc(address, crc);
+
+    return result;
+}
 
 // Write data to EEPROM.
-void Eeprom::write(const uint16_t readWriteAddress, const std::string &writeBuffer)
+bool Eeprom::write(eepromAddress address, const std::string &buffer)
 {
-    mSetReadWriteAddress(readWriteAddress);
-    size_t totalBytesToWrite = writeBuffer.length()
-                               + 3; // + 2 address bytes and 1 null character.
-    uint8_t buffer[totalBytesToWrite];
+    std::vector<uint8_t> temp(buffer.begin(), buffer.end());
+    return write(address, temp);
+}
 
-    for (size_t i = 0; i < totalBytesToWrite; i++)
+bool Eeprom::read(eepromAddress address, std::vector<uint8_t> &buffer)
+{
+    std::lock_guard<Semaphore::Mutex> exclusive(access);
+
+    constexpr uint READ_COUNT = 64;
+
+    bool result = false;
+    uint count = 0;
+    std::vector<uint8_t> readAddress;
+    uint16_t crc = readCrc(address);
+
+    uint8_t temp[READ_COUNT];
+    readAddress.push_back(static_cast<uint8_t>(address >> 8));
+    readAddress.push_back(static_cast<uint8_t>(address));
+
+    eepromWait();
+    count = m_I2c->write(m_DeviceAddress, readAddress.data(), 2);
+    count += m_I2c->read(m_DeviceAddress, temp, READ_COUNT);
+
+    buffer.insert(buffer.begin(), temp, &temp[READ_COUNT]);
+
+    auto endMark = std::find(buffer.begin(), buffer.end(), '\0'); // Find the end marker
+    buffer.erase(endMark, buffer.end()); // Erase all extra data starting from the end marker
+
+    result = count == READ_COUNT + 2 && checkCrc(buffer, crc);
+
+    return result;
+}
+
+bool Eeprom::read(eepromAddress address, std::string &buffer)
+{
+    std::vector<uint8_t> temp;
+
+    if (!read(address, temp)) { return false; }
+
+    buffer.insert(buffer.begin(), temp.begin(), temp.end());
+    return true;
+}
+
+void Eeprom::initCrc()
+{
+    constexpr uint16_t POLYNOMIAL = 0x1021;
+    constexpr uint16_t WIDTH = 8 * sizeof(uint16_t);
+    constexpr uint16_t TOP_BIT = 1 << (WIDTH - 1);
+
+    uint16_t remainder = 0;
+
+    for (int i = 0; i < 256; ++i)
     {
-        if (i < 2) { buffer[i] = mCurrentReadWriteAddress[i]; }
-        else { buffer[i] = writeBuffer.c_str()[i - 2]; }
+        remainder = i << (WIDTH - 8);
+
+        for (uint8_t bit = 8; bit > 0; --bit)
+        {
+            if (remainder & TOP_BIT)
+            {
+                remainder = (remainder << 1) ^ POLYNOMIAL;
+            }
+            else { remainder = (remainder << 1); }
+        }
+
+        m_CrcTable.push_back(remainder);
     }
-    buffer[totalBytesToWrite - 1] = '\0'; // Ensure string null termination.
-
-    mWaitUntilReady();
-    i2c_write_blocking(mI2CHandler->getI2CBus(mI2CBusNumber),
-                       mI2CDeviceAddress,
-                       buffer,
-                       totalBytesToWrite,
-                       false);
 }
 
-// Read data from EEPROM.
-std::string Eeprom::read(const uint16_t readWriteAddress)
+uint16_t Eeprom::calcCrc(const std::vector<uint8_t> &message)
 {
-    char buffer[64];
-    mSetReadWriteAddress(readWriteAddress);
-    mWaitUntilReady();
-    i2c_write_blocking(mI2CHandler->getI2CBus(mI2CBusNumber),
-                       mI2CDeviceAddress,
-                       mCurrentReadWriteAddress,
-                       2,
-                       true);
-    i2c_read_blocking(mI2CHandler->getI2CBus(mI2CBusNumber),
-                      mI2CDeviceAddress,
-                      (uint8_t *)buffer,
-                      62,
-                      false);
+    constexpr uint16_t WIDTH = 8 * sizeof(uint16_t);
 
-    return std::string(buffer);
-}
+    uint8_t data = 0;
+    uint16_t remainder = 0xFFFF;
 
-// Sets the current read/write address.
-void Eeprom::mSetReadWriteAddress(const uint16_t readWriteAddress)
-{
-    mCurrentReadWriteAddress[0] = (uint8_t)(readWriteAddress >> 8);
-    mCurrentReadWriteAddress[1] = (uint8_t)readWriteAddress;
-}
-
-// Polls EEPROM for a completed write cycle.
-void Eeprom::mWaitUntilReady()
-{
-    uint8_t temp[] = {0};
-
-    while (i2c_read_timeout_us(mI2CHandler->getI2CBus(mI2CBusNumber),
-                               mI2CDeviceAddress,
-                               temp,
-                               1,
-                               false,
-                               10000)
-           == PICO_ERROR_GENERIC)
+    for (auto &byte : message)
     {
-        // Loop while EEPROM is unreadable or timeout is reached.
-        sleep_us(500); // Sleep to stop too many repeated requests.
+        data = byte ^ (remainder >> (WIDTH - 8));
+        remainder = m_CrcTable.at(data) ^ (remainder << 8);
+    }
+
+    return remainder;
+}
+
+bool Eeprom::checkCrc(const std::vector<uint8_t> &message, uint16_t crc)
+{
+    uint16_t temp = calcCrc(message);
+
+    return temp == crc;
+}
+
+void Eeprom::writeCrc(eepromAddress address, uint16_t crc)
+{
+    constexpr uint16_t CRC_OFFSET = 0x1000;
+
+    std::vector<uint8_t> tempBuffer;
+
+    tempBuffer.push_back(static_cast<uint8_t>((CRC_OFFSET + address) >> 8));
+    tempBuffer.push_back(static_cast<uint8_t>(CRC_OFFSET + address));
+    tempBuffer.push_back(static_cast<uint8_t>(crc >> 8));
+    tempBuffer.push_back(static_cast<uint8_t>(crc));
+
+    eepromWait();
+
+    m_I2c->write(m_DeviceAddress, tempBuffer.data(), tempBuffer.size());
+}
+
+uint16_t Eeprom::readCrc(eepromAddress address)
+{
+    constexpr uint16_t CRC_OFFSET = 0x1000;
+
+    std::vector<uint8_t> readAddress;
+    std::vector<uint8_t> crcValues(2);
+
+    readAddress.push_back(static_cast<uint8_t>((CRC_OFFSET + address) >> 8));
+    readAddress.push_back(static_cast<uint8_t>(CRC_OFFSET + address));
+
+    m_I2c->transaction(m_DeviceAddress, readAddress.data(), 2, crcValues.data(), 2);
+
+    return static_cast<uint16_t>(crcValues[0] << 8 | crcValues[1]);
+}
+
+// Waits until the EEPROM is readable/writable.
+void Eeprom::eepromWait()
+{
+    std::vector<uint8_t> temp = {0};
+
+    while (m_I2c->read(m_DeviceAddress, temp.data(), 1) != 1)
+    {
+        // Loop while EEPROM is unreadable.
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 

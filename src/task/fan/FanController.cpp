@@ -15,10 +15,8 @@ constexpr int MODBUS_ADDR = 1;
 constexpr int SPEED_REG_ADDR = 0x0000;
 constexpr int ROT_REG_ADDR = 0x0004;
 
-Controller::Controller(std::shared_ptr<Modbus::Client> modbus,
-                       uint32_t stackDepth,
-                       priority taskPriority) :
-    BaseTask("FanController", stackDepth, this, taskPriority),
+Controller::Controller(std::shared_ptr<Modbus::Client> modbus) :
+    BaseTask("FanController", 256, this, HIGH),
     m_SpeedRegister{modbus, MODBUS_ADDR, SPEED_REG_ADDR},
     m_PulseRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false}
 {}
@@ -40,7 +38,8 @@ void Controller::setSpeed(uint16_t speed)
 void Controller::run()
 {
     uint32_t speed = 0;
-    // setSpeed(500);
+
+    setSpeed(0);
 
     while (true)
     {

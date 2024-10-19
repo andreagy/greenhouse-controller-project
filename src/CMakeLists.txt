@@ -6,13 +6,8 @@ add_executable(${PROJECT_NAME}
         display/mono_vlsb.cpp
         display/ssd1306os.cpp
 
-        gpio/RotaryEncoder.cpp
-
         i2c/PicoI2C.cpp
 
-        # ipstack/IPStack.cpp
-        # ipstack/picow_tls_client.c
-        # ipstack/tls_common.c
         modbus/MbClient.cpp
         modbus/Register.cpp
 
@@ -25,20 +20,19 @@ add_executable(${PROJECT_NAME}
         sensor/HMP60.cpp
         sensor/SDP600.cpp
 
-        # storage/Eeprom.cpp
+        storage/Eeprom.cpp
         task/BaseTask.cpp
         task/co2/Co2Controller.cpp
         task/fan/FanController.cpp
+        task/gpio/Input.cpp
+        task/localUI/LocalUI.cpp
         task/network/Manager.cpp
+        task/sensor/Reader.cpp
 
-        timer/Timeout.cpp
+        timer/CounterTimeout.cpp
+        timer/DelayTimeout.cpp
 
         uart/PicoOsUart.cpp
-
-        TestTask.cpp
-        task/localUI/localUI.cpp
-        gpio/Buttons.hpp
-        gpio/Buttons.cpp
 )
 
 # Include directories
@@ -52,6 +46,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
         WIFI_SSID=\"$ENV{WIFI_SSID}\"
         WIFI_PASSWORD=\"$ENV{WIFI_PASSWORD}\"
         CHANNEL_API_KEY=\"$ENV{CHANNEL_API_KEY}\"
+        TALKBACK_ID=\"$ENV{TALKBACK_ID}\"
         TALKBACK_API_KEY=\"$ENV{TALKBACK_API_KEY}\"
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND

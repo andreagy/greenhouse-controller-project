@@ -20,8 +20,8 @@ class HMP60 : public BaseSensor
     void update() override;
 
   private:
-    float m_Rh;
-    float m_Temp;
+    float m_Rh = 0;
+    float m_Temp = 0;
     Modbus::Register m_RhRegister;
     Modbus::Register m_TempRegister;
 };
