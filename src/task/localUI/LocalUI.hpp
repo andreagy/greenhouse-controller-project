@@ -6,10 +6,9 @@
 #include "i2c/PicoI2C.hpp"
 #include "network/NetData.hpp"
 #include "queue.h"
-#include "sensor/GMP252.hpp"
-#include "sensor/HMP60.hpp"
-#include "sensor/SDP600.hpp"
+#include "sensor/SensorData.hpp"
 #include "task/BaseTask.hpp"
+#include "timers.h"
 
 #include <cstdint>
 #include <memory>
@@ -34,14 +33,10 @@ extern MenuState currentState;
 class UI : public BaseTask
 {
   public:
-    UI(QueueHandle_t inputQueue,
-       TaskHandle_t co2Controller,
-       const std::shared_ptr<Modbus::Client> &modbusClient,
-       const std::shared_ptr<I2c::PicoI2C> &i2c,
-       const std::shared_ptr<Sensor::GMP252> &co2Sensor,
-       const std::shared_ptr<Sensor::HMP60> &tempRhSensor,
-       const std::shared_ptr<Sensor::SDP600> &paSensor,
+    UI(const std::shared_ptr<I2c::PicoI2C> &i2c,
+       QueueHandle_t inputQueue,
        QueueHandle_t targetQueue,
+       QueueHandle_t dataQueue,
        QueueHandle_t settingsQueue);
     static bool updateDisplayFlag;
     void run() override;
@@ -50,15 +45,13 @@ class UI : public BaseTask
     uint32_t m_Co2Target = 0;
     MenuState m_State = MAIN_MENU;
     bool m_Co2SetEnabled = false;
-    QueueHandle_t m_InputQueue;
-    QueueHandle_t m_TargetQueue;
-    QueueHandle_t m_SettingsQueue;
     std::shared_ptr<I2c::PicoI2C> i2cBus;
     std::shared_ptr<ssd1306os> display;
-    std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    std::shared_ptr<Sensor::HMP60> m_RhSensor;
-    std::shared_ptr<Sensor::SDP600> m_PaSensor;
-    std::shared_ptr<Sensor::SDP600> m_Eeprom;
+    QueueHandle_t m_InputQueue;
+    QueueHandle_t m_TargetQueue;
+    QueueHandle_t m_DataQueue;
+    QueueHandle_t m_SettingsQueue;
+    Sensor::SensorData m_SensorData;
     Network::Settings m_NetSettings;
     void initializeDisplay();
     void setCO2Target();

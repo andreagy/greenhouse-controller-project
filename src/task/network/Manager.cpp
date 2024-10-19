@@ -2,6 +2,7 @@
 
 #include "network/NetHeader.hpp"
 #include "network/TlsClient.hpp"
+#include "portmacro.h"
 #include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 #include <cyw43_ll.h>
@@ -19,21 +20,15 @@ namespace Task
 namespace Network
 {
 
-Manager::Manager(std::shared_ptr<Sensor::GMP252> co2Sensor,
-                 std::shared_ptr<Sensor::HMP60> rhSensor,
-                 std::shared_ptr<Task::Co2::Controller> co2Controller,
-                 std::shared_ptr<Task::Fan::Controller> fanController,
-                 std::shared_ptr<Storage::Eeprom> eeprom,
+Manager::Manager(std::shared_ptr<Storage::Eeprom> eeprom,
                  QueueHandle_t targetQueue,
+                 QueueHandle_t dataQueue,
                  QueueHandle_t settingsQueue) :
     BaseTask{"NetworkClient", 1024, this, MED},
-    m_Co2Sensor{co2Sensor},
-    m_RhSensor{rhSensor},
-    m_Co2Controller{co2Controller},
-    m_FanController{fanController},
     m_Eeprom{eeprom},
     m_ReportTimeout{25000},
     m_TargetQueue{targetQueue},
+    m_DataQueue{dataQueue},
     m_SettingsQueue{settingsQueue}
 {
     update();
@@ -83,6 +78,7 @@ void Manager::run()
     {
         if (m_Connected)
         {
+            xQueuePeek(m_DataQueue, &m_SensorData, portMAX_DELAY);
             getTalkback();
             vTaskDelay(5000);
             update();
@@ -135,7 +131,7 @@ void Manager::sendReport()
 {
     if (m_ReportTimeout())
     {
-        m_TlsClient->send(createRequest(m_Data));
+        m_TlsClient->send(createRequest(m_NetworkData));
         m_ReportTimeout.reset();
     }
 }
@@ -167,11 +163,15 @@ std::string Manager::createRequest()
 
 void Manager::update()
 {
-    m_Data.co2 = m_Co2Sensor->getCo2();
-    m_Data.rh = m_RhSensor->getRh();
-    m_Data.temp = m_RhSensor->getTemp();
-    m_Data.target = m_Co2Controller->getTarget();
-    m_Data.speed = m_FanController->getSpeed();
+    xQueuePeek(m_DataQueue, &m_SensorData, 0);
+
+    m_NetworkData.co2 = m_SensorData.co2;
+    m_NetworkData.rh = m_SensorData.rh;
+    m_NetworkData.temp = m_SensorData.rh;
+    m_NetworkData.target = 900; // TODO: placeholders
+    m_NetworkData.speed = 150;
+    // m_Data.target = m_Co2Controller->getTarget();
+    // m_Data.speed = m_FanController->getSpeed();
 }
 
 } // namespace Network

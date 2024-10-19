@@ -2,17 +2,15 @@
 
 #include "MenuVariables.hpp"
 #include "gpio/GpioInput.hpp"
+#include "portmacro.h"
 #include "projdefs.h"
 #include "timer/DelayTimeout.hpp"
-#include "timers.h"
 
-#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
 bool Task::LocalUI::UI::updateDisplayFlag = false;
 
@@ -22,23 +20,17 @@ namespace Task
 namespace LocalUI
 {
 
-UI::UI(QueueHandle_t inputQueue,
-       TaskHandle_t co2Controller,
-       const std::shared_ptr<Modbus::Client> &modbusClient,
-       const std::shared_ptr<I2c::PicoI2C> &i2c,
-       const std::shared_ptr<Sensor::GMP252> &co2Sensor,
-       const std::shared_ptr<Sensor::HMP60> &tempRhSensor,
-       const std::shared_ptr<Sensor::SDP600> &paSensor,
+UI::UI(const std::shared_ptr<I2c::PicoI2C> &i2c,
+       QueueHandle_t inputQueue,
        QueueHandle_t targetQueue,
+       QueueHandle_t dataQueue,
        QueueHandle_t settingsQueue) :
     BaseTask{"UserInterface", 512, this, MED},
+    i2cBus{i2c},
     m_InputQueue{inputQueue},
     m_TargetQueue{targetQueue},
-    m_SettingsQueue{settingsQueue},
-    i2cBus{i2c},
-    m_Co2Sensor{co2Sensor},
-    m_RhSensor{tempRhSensor},
-    m_PaSensor{paSensor}
+    m_DataQueue{dataQueue},
+    m_SettingsQueue{settingsQueue}
 {
     UI::updateDisplayFlag = false;
 }
@@ -133,12 +125,14 @@ void UI::displaySensorValues()
 {
     constexpr uint8_t FONT_SIZE = 8;
 
+    xQueuePeek(m_DataQueue, &m_SensorData, portMAX_DELAY);
+
     // Format values
     std::ostringstream co2Stream, tempStream, humidityStream, pressureStream;
-    co2Stream << std::fixed << std::setprecision(2) << m_Co2Sensor->getCo2();
-    tempStream << std::fixed << std::setprecision(1) << m_RhSensor->getTemp();
-    humidityStream << std::fixed << std::setprecision(1) << m_RhSensor->getRh();
-    pressureStream << std::fixed << std::setprecision(1) << m_PaSensor->getPressure();
+    co2Stream << std::fixed << std::setprecision(2) << m_SensorData.co2;
+    tempStream << std::fixed << std::setprecision(1) << m_SensorData.temp;
+    humidityStream << std::fixed << std::setprecision(1) << m_SensorData.rh;
+    pressureStream << m_SensorData.pa;
 
     std::string co2TargetText = "Set CO2: ";
     std::string co2TargetNumber = std::to_string(m_Co2Target);

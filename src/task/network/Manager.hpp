@@ -5,6 +5,7 @@
 #include "network/TlsClient.hpp"
 #include "sensor/GMP252.hpp"
 #include "sensor/HMP60.hpp"
+#include "sensor/SensorData.hpp"
 #include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 #include "task/co2/Co2Controller.hpp"
@@ -22,12 +23,9 @@ namespace Network
 class Manager : public BaseTask
 {
   public:
-    Manager(std::shared_ptr<Sensor::GMP252> co2Sensor,
-            std::shared_ptr<Sensor::HMP60> rhSensor,
-            std::shared_ptr<Task::Co2::Controller> co2Controller,
-            std::shared_ptr<Task::Fan::Controller> fanController,
-            std::shared_ptr<Storage::Eeprom> eeprom,
+    Manager(std::shared_ptr<Storage::Eeprom> eeprom,
             QueueHandle_t targetQueue,
+            QueueHandle_t dataQueue,
             QueueHandle_t settingsQueue);
     void run() override;
 
@@ -37,15 +35,13 @@ class Manager : public BaseTask
     std::string m_ApiKey;
     std::string m_TalkbackId;
     std::string m_TalkbackKey;
-    ::Network::Data m_Data;
+    ::Network::Data m_NetworkData;
+    Sensor::SensorData m_SensorData;
     std::shared_ptr<::Network::Client> m_TlsClient;
-    std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    std::shared_ptr<Sensor::HMP60> m_RhSensor;
-    std::shared_ptr<Task::Co2::Controller> m_Co2Controller;
-    std::shared_ptr<Task::Fan::Controller> m_FanController;
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
     Timer::CounterTimeout m_ReportTimeout;
     QueueHandle_t m_TargetQueue;
+    QueueHandle_t m_DataQueue;
     QueueHandle_t m_SettingsQueue;
     bool m_Connected = false;
     int connect();
