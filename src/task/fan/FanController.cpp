@@ -14,6 +14,8 @@ namespace Fan
 constexpr int MODBUS_ADDR = 1;
 constexpr int SPEED_REG_ADDR = 0x0000;
 constexpr int ROT_REG_ADDR = 0x0004;
+constexpr uint16_t FAN_MIN = 150;
+constexpr uint16_t FAN_MAX = 1000;
 
 Controller::Controller(std::shared_ptr<Modbus::Client> modbus) :
     BaseTask("FanController", 256, this, HIGH),
@@ -27,9 +29,8 @@ uint16_t Controller::getSpeed() { return m_Speed; }
 
 void Controller::setSpeed(uint16_t speed)
 {
-    constexpr uint16_t FAN_MAX = 1000;
-
-    if (speed < 0 || speed > FAN_MAX) { speed = speed < FAN_MAX ? 0 : FAN_MAX; }
+    if (speed < FAN_MIN) { speed = 0; }
+    if (speed > FAN_MAX) { speed = FAN_MAX; }
 
     m_SpeedRegister.write(speed);
     m_Speed = m_SpeedRegister.read();
