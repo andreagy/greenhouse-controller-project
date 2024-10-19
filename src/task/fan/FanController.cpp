@@ -23,10 +23,6 @@ Controller::Controller(std::shared_ptr<Modbus::Client> modbus) :
     m_PulseRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false}
 {}
 
-uint16_t Controller::getPulse() { return m_PulseRegister.read(); }
-
-uint16_t Controller::getSpeed() { return m_Speed; }
-
 void Controller::setSpeed(uint16_t speed)
 {
     if (speed < FAN_MIN) { speed = 0; }

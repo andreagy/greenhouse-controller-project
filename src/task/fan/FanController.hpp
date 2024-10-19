@@ -18,8 +18,6 @@ class Controller : public BaseTask
   public:
     Controller(std::shared_ptr<Modbus::Client> modbus);
     Controller(const Controller &) = delete;
-    uint16_t getPulse();
-    uint16_t getSpeed();
     void setSpeed(uint16_t speed);
     void run();
 
