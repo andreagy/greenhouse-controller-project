@@ -97,6 +97,7 @@ void WifiSetup::handleInput(std::string &string, uint8_t maxLength)
             case Gpio::SW1:
                 // Delete last character
                 if (!string.empty()) { string.pop_back(); }
+                break;
             case Gpio::SW2:
                 if (m_State == SET_SSID) { m_State = SET_PASSWORD; }
                 else if (m_State == SET_PASSWORD && string.size() >= PASSWORD_MIN)

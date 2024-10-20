@@ -99,6 +99,7 @@ void TsSetup::handleInput(std::string &string, uint8_t requiredLength)
             case Gpio::SW1:
                 // Delete last character
                 if (!string.empty()) { string.pop_back(); }
+                break;
             case Gpio::SW2:
                 if (m_State == SET_API_KEY && string.size() == requiredLength)
                 {
