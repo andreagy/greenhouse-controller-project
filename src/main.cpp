@@ -3,9 +3,7 @@
 #include "i2c/PicoI2C.hpp"
 #include "modbus/MbClient.hpp"
 #include "queue.h"
-#include "sensor/GMP252.hpp"
-#include "sensor/HMP60.hpp"
-#include "sensor/SDP600.hpp"
+#include "sensor/SensorData.hpp"
 #include "storage/Eeprom.hpp"
 #include "task.h"
 #include "task/co2/Co2Controller.hpp"
@@ -34,54 +32,31 @@ int main()
     stdio_init_all();
     printf("\nBoot\n");
 
-    // Create system objects
+    // Create shared resources
     auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
     auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600);
     auto modbusClient = std::make_shared<Modbus::Client>(uart);
-    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0); // TODO: eeprom task with queue for saving data?
+    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0);
 
-    // TODO: get rid of sensor object, handle all in sensor reader task
-    // Create sensor objects
-    auto co2Sensor = std::make_shared<Sensor::GMP252>(modbusClient);
-    auto rhSensor = std::make_shared<Sensor::HMP60>(modbusClient);
-    auto paSensor = std::make_shared<Sensor::SDP600>(picoI2c1);
-
-    // Create queue for GPIO inputs
-    QueueHandle_t inputQueue = xQueueCreate(3, sizeof(Gpio::inputPin));
+    // Create queues
+    QueueHandle_t inputQueue = xQueueCreate(2, sizeof(Gpio::inputPin));
+    QueueHandle_t dataQueue = xQueueCreate(1, sizeof(Sensor::SensorData));
+    QueueHandle_t fanQueue = xQueueCreate(1, sizeof(uint16_t));
     QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
-    QueueHandle_t settingsQueue = xQueueCreate(2, sizeof(Network::Settings));
+    QueueHandle_t settingsQueue = xQueueCreate(1, sizeof(Network::Settings));
 
-    // TODO: clean up task dependencies, use more queues for task-to-task
-    // communication Create task objects
+    // Create task objects
     auto gpioInput = new Task::Gpio::Input(inputQueue);
-    auto sensorReader = new Task::Sensor::Reader();
-    auto fanController = std::make_shared<Task::Fan::Controller>(modbusClient);
-    auto co2Controller = std::make_shared<Task::Co2::Controller>(co2Sensor,
-                                                                 fanController->getHandle(),
-                                                                 targetQueue,
-                                                                 eeprom);
-    auto localUI = new Task::LocalUI::UI(inputQueue,
-                                         co2Controller->getHandle(),
-                                         modbusClient,
-                                         picoI2c1,
-                                         co2Sensor,
-                                         rhSensor,
-                                         paSensor,
-                                         targetQueue,
-                                         settingsQueue);
-    auto netManager = new Task::Network::Manager(co2Sensor,
-                                                 rhSensor,
-                                                 co2Controller,
-                                                 fanController,
-                                                 eeprom,
+    auto sensorReader = new Task::Sensor::Reader(modbusClient, picoI2c1, dataQueue);
+    auto fanController = new Task::Fan::Controller(modbusClient, dataQueue, fanQueue);
+    auto co2Controller = new Task::Co2::Controller(eeprom, dataQueue, targetQueue);
+    auto localUI = new Task::LocalUI::UI(picoI2c1, inputQueue, dataQueue, targetQueue, settingsQueue);
+    auto netManager = new Task::Network::Manager(eeprom,
+                                                 dataQueue,
+                                                 fanQueue,
                                                  targetQueue,
                                                  settingsQueue);
-
-    // Attach sensors to the reader
-    sensorReader->attach(co2Sensor);
-    sensorReader->attach(rhSensor);
-    sensorReader->attach(paSensor);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -91,6 +66,8 @@ int main()
     // Delete task objects
     delete gpioInput;
     delete sensorReader;
+    delete fanController;
+    delete co2Controller;
     delete localUI;
     delete netManager;
 

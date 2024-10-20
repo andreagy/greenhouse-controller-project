@@ -1,5 +1,6 @@
 #include "TlsClient.hpp"
 
+#include "projdefs.h"
 #include <lwip/altcp.h>
 #include <lwip/dns.h>
 #include <mbedtls/ssl.h>
@@ -8,8 +9,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-
-// TODO: read response and get HTTP status code, handle errors (if status not 200, probably wrong api settings?)
 
 namespace Network
 {
@@ -27,11 +26,15 @@ Client::Client(uint8_t timeout, QueueHandle_t targetQueue, const uint8_t *cert, 
 
 Client::~Client() { altcp_tls_free_config(m_Config); }
 
-bool Client::send(const std::string &request)
+int Client::send(const std::string &request)
 {
     m_Request = request;
+    setResponseStatus(0);
+    open();
 
-    return open();
+    while (m_ResponseStatus == 0) { vTaskDelay(pdMS_TO_TICKS(1)); }
+
+    return m_ResponseStatus;
 }
 
 int Client::getError() const { return m_Error; }
@@ -40,13 +43,25 @@ void Client::setError(int Error) { m_Error = Error; }
 
 std::string Client::getRequest() const { return m_Request; }
 
-void Client::parseResponse(const char *buffer, uint8_t count)
+int Client::getStatus(const char *buffer, uint16_t count)
 {
-    const char *target = strstr(buffer, "target=");
-    if (target != NULL)
+    int status = -1;
+    const char *substr = strstr(buffer, "Status: ");
+
+    if (substr != NULL) { sscanf(substr, "Status: %d", &status); }
+    return status;
+}
+
+void Client::setResponseStatus(int status) { m_ResponseStatus = status; }
+
+void Client::getTarget(const char *buffer, uint16_t count)
+{
+    uint32_t value;
+    const char *substr = strstr(buffer, "target=");
+
+    if (substr != NULL && sscanf(substr, "target=%u", &value) == 1)
     {
-        sscanf(target, "target=%u", &m_Target);
-        xQueueOverwrite(m_TargetQueue, &m_Target);
+        xQueueOverwrite(m_TargetQueue, &value);
     }
 }
 
@@ -187,7 +202,14 @@ err_t Client::tlsReceive(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t
         buf[p->tot_len] = 0;
 
         // printf("***\nnew data received from server:\n***\n\n%s\n", buf);
-        client->parseResponse(buf, p->tot_len);
+        int status = client->getStatus(buf, p->tot_len);
+        if (status == 200) { client->getTarget(buf, p->tot_len); }
+        else if (status != -1)
+        {
+            printf("Error sending Thingspeak data. Check API key.\n");
+        }
+        client->setResponseStatus(status);
+
         free(buf);
 
         altcp_recved(pcb, p->tot_len);

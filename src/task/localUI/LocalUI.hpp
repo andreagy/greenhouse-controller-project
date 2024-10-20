@@ -3,16 +3,16 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "display/ssd1306os.h"
+#include "gpio/GpioInput.hpp"
 #include "i2c/PicoI2C.hpp"
 #include "network/NetData.hpp"
 #include "queue.h"
-#include "sensor/GMP252.hpp"
-#include "sensor/HMP60.hpp"
-#include "sensor/SDP600.hpp"
 #include "task/BaseTask.hpp"
+#include "timers.h"
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace Task
 {
@@ -20,53 +20,40 @@ namespace Task
 namespace LocalUI
 {
 
-enum MenuState
+enum MenuState : uint8_t
 {
-    MAIN_MENU,
     SENSOR_VALUES,
     WIFI_SETTINGS,
-    THINGSPEAK_SETTINGS
+    THINGSPEAK_SETTINGS,
+    MAIN_MENU
 };
-
-// Declare currentState as extern
-extern MenuState currentState;
 
 class UI : public BaseTask
 {
   public:
-    UI(QueueHandle_t inputQueue,
-       TaskHandle_t co2Controller,
-       const std::shared_ptr<Modbus::Client> &modbusClient,
-       const std::shared_ptr<I2c::PicoI2C> &i2c,
-       const std::shared_ptr<Sensor::GMP252> &co2Sensor,
-       const std::shared_ptr<Sensor::HMP60> &tempRhSensor,
-       const std::shared_ptr<Sensor::SDP600> &paSensor,
+    UI(const std::shared_ptr<I2c::PicoI2C> &i2c,
+       QueueHandle_t inputQueue,
+       QueueHandle_t dataQueue,
        QueueHandle_t targetQueue,
        QueueHandle_t settingsQueue);
     static bool updateDisplayFlag;
     void run() override;
 
   private:
-    uint32_t m_Co2Target = 0;
+    uint8_t m_CharIndex = 0;
+    ::Gpio::inputPin m_InputPin;
     MenuState m_State = MAIN_MENU;
-    bool m_Co2SetEnabled = false;
+    const std::vector<std::string> m_MenuOptions;
+    std::shared_ptr<I2c::PicoI2C> m_I2cBus;
+    std::shared_ptr<ssd1306os> m_Display;
     QueueHandle_t m_InputQueue;
+    QueueHandle_t m_DataQueue;
     QueueHandle_t m_TargetQueue;
     QueueHandle_t m_SettingsQueue;
-    std::shared_ptr<I2c::PicoI2C> i2cBus;
-    std::shared_ptr<ssd1306os> display;
-    std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    std::shared_ptr<Sensor::HMP60> m_RhSensor;
-    std::shared_ptr<Sensor::SDP600> m_PaSensor;
-    std::shared_ptr<Sensor::SDP600> m_Eeprom;
     Network::Settings m_NetSettings;
     void initializeDisplay();
-    void setCO2Target();
     void displayMenu();
-    void displaySensorValues();
-    void displayWiFiSettings();
-    void displayThingSpeakSettings();
-    static void displayRefreshCallback(TimerHandle_t xTimer);
+    void handleInput();
 };
 
 } // namespace LocalUI

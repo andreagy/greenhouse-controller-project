@@ -1,18 +1,10 @@
-#ifndef MENUVARIABLES_HPP
-#define MENUVARIABLES_HPP
+#ifndef CHARACTERSET_HPP
+#define CHARACTERSET_HPP
 
-#include <string>
 #include <vector>
 
-namespace Task
+namespace View
 {
-
-namespace LocalUI
-{
-
-static const std::vector<std::string> menuOptions = {"Sensor Values",
-                                                     "Set Network",
-                                                     "Set ThingSpeak"};
 
 static const std::vector<char> characterSet =
     {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
@@ -21,8 +13,6 @@ static const std::vector<char> characterSet =
      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'};
 
-} // namespace LocalUI
+} // namespace View
 
-} // namespace Task
-
-#endif /* MENUVARIABLES_HPP */
+#endif /* CHARACTERSET_HPP */

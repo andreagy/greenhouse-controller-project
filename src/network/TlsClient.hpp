@@ -21,21 +21,23 @@ class Client
            const uint8_t *cert = NULL,
            size_t cert_len = 0);
     ~Client();
-    bool send(const std::string &request);
+    int send(const std::string &request);
     int getError() const;
     void setError(int Error);
     void setTimeout(int timeout);
     std::string getRequest() const;
-    void parseResponse(const char *buffer, uint8_t count);
+    int getStatus(const char *buffer, uint16_t count);
+    void getTarget(const char *buffer, uint16_t count);
     altcp_pcb *getPcb() const;
+    void setResponseStatus(int status);
 
   private:
     const std::string m_Hostname = "api.thingspeak.com";
     bool m_Complete;
     int m_Error;
+    int m_ResponseStatus;
     uint8_t m_Timeout;
     std::string m_Request;
-    uint32_t m_Target = 0;
     altcp_pcb *m_Pcb;
     altcp_tls_config *m_Config;
     QueueHandle_t m_TargetQueue;

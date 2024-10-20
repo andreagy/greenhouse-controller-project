@@ -1,7 +1,9 @@
 #ifndef CO2CONTROLLER_HPP
 #define CO2CONTROLLER_HPP
 
-#include "sensor/GMP252.hpp"
+#include "FreeRTOS.h" // IWYU pragma: keep
+#include "queue.h"
+#include "sensor/SensorData.hpp"
 #include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 
@@ -16,10 +18,9 @@ namespace Co2
 class Controller : public BaseTask
 {
   public:
-    Controller(std::shared_ptr<Sensor::GMP252> co2Sensor,
-               TaskHandle_t fanController,
-               QueueHandle_t targetQueue,
-               std::shared_ptr<Storage::Eeprom> eeprom);
+    Controller(std::shared_ptr<Storage::Eeprom> eeprom,
+               QueueHandle_t dataQueue,
+               QueueHandle_t targetQueue);
     float getTarget();
     void run() override;
 
@@ -28,8 +29,8 @@ class Controller : public BaseTask
     const float m_Co2Min = 200;
     const float m_Co2Max = 1500;
     uint32_t m_Co2Target = 900;
-    std::shared_ptr<Sensor::GMP252> m_Co2Sensor;
-    TaskHandle_t m_FanControlHandle;
+    Sensor::SensorData m_SensorData;
+    QueueHandle_t m_DataQueue;
     QueueHandle_t m_TargetQueue;
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
     void setTarget(uint32_t target);
