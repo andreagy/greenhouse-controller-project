@@ -24,8 +24,6 @@ enum taskState
     VALVE_OPEN
 };
 
-// TODO: handle eeprom elsewhere?
-
 Controller::Controller(std::shared_ptr<Storage::Eeprom> eeprom,
                        QueueHandle_t dataQueue,
                        QueueHandle_t targetQueue) :
