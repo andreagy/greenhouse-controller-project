@@ -33,6 +33,7 @@ class Manager : public BaseTask
     std::string m_TalkbackId;
     std::string m_TalkbackKey;
     ::Network::Data m_NetworkData;
+    ::Network::Settings m_NetSettings;
     Sensor::SensorData m_SensorData;
     std::shared_ptr<::Network::Client> m_TlsClient;
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
@@ -42,10 +43,12 @@ class Manager : public BaseTask
     QueueHandle_t m_TargetQueue;
     QueueHandle_t m_SettingsQueue;
     bool m_Connected = false;
-    int connect();
+    int connect(std::string ssid, std::string password);
     int reconnect(std::string ssid, std::string password);
-    void sendReport();
-    void getTalkback();
+    void testTls();
+    void getEeprom();
+    int sendReport();
+    int getTalkback();
     std::string createRequest(const ::Network::Data &data);
     std::string createRequest();
     void update();
