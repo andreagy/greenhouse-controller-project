@@ -17,9 +17,9 @@ struct Data
 
 struct Settings
 {
-    bool wifi = false;
     char str1[64];
     char str2[64];
+    char id[8];
 };
 
 } // namespace Network
