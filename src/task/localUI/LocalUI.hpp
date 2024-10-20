@@ -3,15 +3,16 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "display/ssd1306os.h"
+#include "gpio/GpioInput.hpp"
 #include "i2c/PicoI2C.hpp"
 #include "network/NetData.hpp"
 #include "queue.h"
-#include "sensor/SensorData.hpp"
 #include "task/BaseTask.hpp"
 #include "timers.h"
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace Task
 {
@@ -19,47 +20,40 @@ namespace Task
 namespace LocalUI
 {
 
-enum MenuState
+enum MenuState : uint8_t
 {
-    MAIN_MENU,
     SENSOR_VALUES,
     WIFI_SETTINGS,
-    THINGSPEAK_SETTINGS
+    THINGSPEAK_SETTINGS,
+    MAIN_MENU
 };
-
-// Declare currentState as extern
-extern MenuState currentState;
 
 class UI : public BaseTask
 {
   public:
     UI(const std::shared_ptr<I2c::PicoI2C> &i2c,
        QueueHandle_t inputQueue,
-       QueueHandle_t targetQueue,
        QueueHandle_t dataQueue,
+       QueueHandle_t targetQueue,
        QueueHandle_t settingsQueue);
     static bool updateDisplayFlag;
     void run() override;
 
   private:
-    uint32_t m_Co2Target = 0;
+    uint8_t m_CharIndex = 0;
+    ::Gpio::inputPin m_InputPin;
     MenuState m_State = MAIN_MENU;
-    bool m_Co2SetEnabled = false;
-    std::shared_ptr<I2c::PicoI2C> i2cBus;
-    std::shared_ptr<ssd1306os> display;
+    const std::vector<std::string> m_MenuOptions;
+    std::shared_ptr<I2c::PicoI2C> m_I2cBus;
+    std::shared_ptr<ssd1306os> m_Display;
     QueueHandle_t m_InputQueue;
-    QueueHandle_t m_TargetQueue;
     QueueHandle_t m_DataQueue;
+    QueueHandle_t m_TargetQueue;
     QueueHandle_t m_SettingsQueue;
-    Sensor::SensorData m_SensorData;
     Network::Settings m_NetSettings;
     void initializeDisplay();
-    void setCO2Target();
     void displayMenu();
-    void displaySensorValues();
-    void displayWiFiSettings();
-    void displayThingSpeakSettings();
-    static void displayRefreshCallback(TimerHandle_t xTimer);
+    void handleInput();
 };
 
 } // namespace LocalUI
