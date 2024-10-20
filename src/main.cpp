@@ -40,20 +40,23 @@ int main()
     auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0);
 
     // Create queues
-    QueueHandle_t inputQueue = xQueueCreate(3, sizeof(Gpio::inputPin));
+    QueueHandle_t inputQueue = xQueueCreate(2, sizeof(Gpio::inputPin));
     QueueHandle_t dataQueue = xQueueCreate(1, sizeof(Sensor::SensorData));
+    QueueHandle_t fanQueue = xQueueCreate(1, sizeof(uint16_t));
     QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
     QueueHandle_t settingsQueue = xQueueCreate(1, sizeof(Network::Settings));
-
-    // TODO: clean up task dependencies, use more queues for task-to-task communication
 
     // Create task objects
     auto gpioInput = new Task::Gpio::Input(inputQueue);
     auto sensorReader = new Task::Sensor::Reader(modbusClient, picoI2c1, dataQueue);
-    auto fanController = new Task::Fan::Controller(modbusClient, dataQueue);
+    auto fanController = new Task::Fan::Controller(modbusClient, dataQueue, fanQueue);
     auto co2Controller = new Task::Co2::Controller(eeprom, dataQueue, targetQueue);
     auto localUI = new Task::LocalUI::UI(picoI2c1, inputQueue, dataQueue, targetQueue, settingsQueue);
-    auto netManager = new Task::Network::Manager(eeprom, dataQueue, targetQueue, settingsQueue);
+    auto netManager = new Task::Network::Manager(eeprom,
+                                                 dataQueue,
+                                                 fanQueue,
+                                                 targetQueue,
+                                                 settingsQueue);
 
     // Start scheduler
     vTaskStartScheduler();

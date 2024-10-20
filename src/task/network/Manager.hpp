@@ -3,13 +3,9 @@
 
 #include "network/NetData.hpp"
 #include "network/TlsClient.hpp"
-#include "sensor/GMP252.hpp"
-#include "sensor/HMP60.hpp"
 #include "sensor/SensorData.hpp"
 #include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
-#include "task/co2/Co2Controller.hpp"
-#include "task/fan/FanController.hpp"
 #include "timer/CounterTimeout.hpp"
 
 #include <memory>
@@ -25,6 +21,7 @@ class Manager : public BaseTask
   public:
     Manager(std::shared_ptr<Storage::Eeprom> eeprom,
             QueueHandle_t dataQueue,
+            QueueHandle_t fanQueue,
             QueueHandle_t targetQueue,
             QueueHandle_t settingsQueue);
     void run() override;
@@ -41,6 +38,7 @@ class Manager : public BaseTask
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
     Timer::CounterTimeout m_ReportTimeout;
     QueueHandle_t m_DataQueue;
+    QueueHandle_t m_FanQueue;
     QueueHandle_t m_TargetQueue;
     QueueHandle_t m_SettingsQueue;
     bool m_Connected = false;

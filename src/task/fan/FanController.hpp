@@ -19,7 +19,9 @@ namespace Fan
 class Controller : public BaseTask
 {
   public:
-    Controller(std::shared_ptr<Modbus::Client> modbus, QueueHandle_t dataQueue);
+    Controller(std::shared_ptr<Modbus::Client> modbus,
+               QueueHandle_t dataQueue,
+               QueueHandle_t fanQueue);
     Controller(const Controller &) = delete;
     void setSpeed(uint16_t speed);
     void run();
@@ -30,6 +32,7 @@ class Controller : public BaseTask
     Modbus::Register m_SpeedRegister;
     Modbus::Register m_PulseRegister;
     QueueHandle_t m_DataQueue;
+    QueueHandle_t m_FanQueue;
 };
 
 } // namespace Fan

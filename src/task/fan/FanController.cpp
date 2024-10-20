@@ -19,11 +19,14 @@ constexpr int ROT_REG_ADDR = 0x0004;
 constexpr uint16_t FAN_MIN = 150;
 constexpr uint16_t FAN_MAX = 1000;
 
-Controller::Controller(std::shared_ptr<Modbus::Client> modbus, QueueHandle_t dataQueue) :
+Controller::Controller(std::shared_ptr<Modbus::Client> modbus,
+                       QueueHandle_t dataQueue,
+                       QueueHandle_t fanQueue) :
     BaseTask("FanController", 256, this, HIGH),
     m_SpeedRegister{modbus, MODBUS_ADDR, SPEED_REG_ADDR},
     m_PulseRegister{modbus, MODBUS_ADDR, ROT_REG_ADDR, false},
-    m_DataQueue{dataQueue}
+    m_DataQueue{dataQueue},
+    m_FanQueue{fanQueue}
 {}
 
 void Controller::setSpeed(uint16_t speed)
@@ -33,6 +36,7 @@ void Controller::setSpeed(uint16_t speed)
 
     m_SpeedRegister.write(speed);
     m_Speed = m_SpeedRegister.read();
+    xQueueOverwrite(m_FanQueue, &m_Speed);
 }
 
 void Controller::run()

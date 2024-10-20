@@ -1,8 +1,8 @@
 #include "Manager.hpp"
 
+#include "FreeRTOS.h" // IWYU pragma: keep
 #include "network/NetHeader.hpp"
 #include "network/TlsClient.hpp"
-#include "portmacro.h"
 #include "storage/Eeprom.hpp"
 #include "task/BaseTask.hpp"
 #include <cyw43_ll.h>
@@ -22,12 +22,14 @@ namespace Network
 
 Manager::Manager(std::shared_ptr<Storage::Eeprom> eeprom,
                  QueueHandle_t dataQueue,
+                 QueueHandle_t fanQueue,
                  QueueHandle_t targetQueue,
                  QueueHandle_t settingsQueue) :
     BaseTask{"NetworkClient", 1024, this, MED},
     m_Eeprom{eeprom},
     m_ReportTimeout{25000},
     m_DataQueue{dataQueue},
+    m_FanQueue{fanQueue},
     m_TargetQueue{targetQueue},
     m_SettingsQueue{settingsQueue}
 {
@@ -36,6 +38,7 @@ Manager::Manager(std::shared_ptr<Storage::Eeprom> eeprom,
 
 void Manager::run()
 {
+    // TODO: move to a function
     if (!m_Eeprom->read(Storage::SSID_ADDR, m_Ssid) || m_Ssid.empty())
     {
         m_Ssid = WIFI_SSID;
@@ -78,7 +81,6 @@ void Manager::run()
     {
         if (m_Connected)
         {
-            xQueuePeek(m_DataQueue, &m_SensorData, portMAX_DELAY);
             getTalkback();
             vTaskDelay(5000);
             update();
@@ -164,14 +166,12 @@ std::string Manager::createRequest()
 void Manager::update()
 {
     xQueuePeek(m_DataQueue, &m_SensorData, 0);
+    xQueuePeek(m_TargetQueue, &m_NetworkData.target, 0);
+    xQueuePeek(m_FanQueue, &m_NetworkData.speed, 0);
 
     m_NetworkData.co2 = m_SensorData.co2;
     m_NetworkData.rh = m_SensorData.rh;
-    m_NetworkData.temp = m_SensorData.rh;
-    m_NetworkData.target = 900; // TODO: placeholders
-    m_NetworkData.speed = 150;
-    // m_Data.target = m_Co2Controller->getTarget();
-    // m_Data.speed = m_FanController->getSpeed();
+    m_NetworkData.temp = m_SensorData.temp;
 }
 
 } // namespace Network
