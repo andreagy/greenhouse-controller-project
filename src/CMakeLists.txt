@@ -33,6 +33,10 @@ add_executable(${PROJECT_NAME}
         timer/DelayTimeout.cpp
 
         uart/PicoOsUart.cpp
+
+        view/SensorView.cpp
+        view/TsSetup.cpp
+        view/WifiSetup.cpp
 )
 
 # Include directories
