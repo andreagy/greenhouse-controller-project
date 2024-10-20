@@ -142,23 +142,24 @@ void Manager::getTalkback() { m_TlsClient->send(createRequest()); }
 
 std::string Manager::createRequest(const ::Network::Data &data)
 {
-    std::string request = ::Network::Request::updateHeader;
+    std::string request = "POST /update HTTP/1.1\r\n" + ::Network::Request::headerPrefix;
     std::string content = "api_key=" + m_ApiKey
                           + "&field1=" + std::to_string(data.co2)
                           + "&field2=" + std::to_string(data.rh)
                           + "&field3=" + std::to_string(data.temp)
                           + "&field4=" + std::to_string(data.speed / 10)
                           + "&field5=" + std::to_string(data.target);
-    request += std::to_string(content.size()) + ::Network::Request::headerEnd + content;
+    request += std::to_string(content.size()) + ::Network::Request::headerSuffix + content;
 
     return request;
 }
 
 std::string Manager::createRequest()
 {
-    std::string request = ::Network::Request::executeHeader;
+    std::string request = "POST /talkbacks/" + m_TalkbackId + "/commands/execute HTTP/1.1\r\n"
+                          + ::Network::Request::headerPrefix;
     std::string content = "api_key=" + m_TalkbackKey;
-    request += std::to_string(content.size()) + ::Network::Request::headerEnd + content;
+    request += std::to_string(content.size()) + ::Network::Request::headerSuffix + content;
 
     return request;
 }

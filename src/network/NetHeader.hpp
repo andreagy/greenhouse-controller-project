@@ -9,22 +9,13 @@ namespace Network
 namespace Request
 {
 
-static std::string updateHeader = {"POST /update HTTP/1.1\r\n"
-                                   "Host: api.thingspeak.com\r\n"
+static std::string headerPrefix = {"Host: api.thingspeak.com\r\n"
                                    "Connection: close\r\n"
                                    "User-Agent: PicoW\r\n"
                                    "Accept: */*\r\n"
                                    "Content-Length: "};
 
-static std::string executeHeader = {
-    "POST /talkbacks/53284/commands/execute HTTP/1.1\r\n"
-    "Host: api.thingspeak.com\r\n"
-    "Connection: close\r\n"
-    "User-Agent: PicoW\r\n"
-    "Accept: */*\r\n"
-    "Content-Length: "};
-
-static std::string headerEnd = {
+static std::string headerSuffix = {
     "\r\n"
     "Content-Type: application/x-www-form-urlencoded\r\n"
     "\r\n"};
