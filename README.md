@@ -1,9 +1,9 @@
-# rp2040-freertos-CPP-template
+# Raspberry Pico Greenhouse Controller
 
-This is a template project for developing FreeRTOS based applications on Raspberry Pi RP2040 based boards. 
-This template uses the "official" RP2040 port from the Raspberry Pi Foundation.
-A stripped down version of FreeRTOSKernel V10.6.2 is included in the project. 
-All other ports except RP2040 port have been removed to reduce disk usage.
+This project aims to control the CO<sup>2</sup>-levels of a green house using the Raspberry Pico W microcontroller.
 
-The drivers included in the project are interrupt driven and require FreeRTOS to work correctly.
+The controller receives environmental data from external sensors using the Modbus interface and releases more CO<sup>2</sup> to the greenhouse as necessary.
 
+The environmental data and the CO<sup>2</sup>-target level are reported to the ThingSpeak cloud service for long term monitoring.
+
+User can also send new target levels using the ThingSpeak TalkBack commands.
