@@ -24,8 +24,8 @@ class Manager : public BaseTask
 {
   public:
     Manager(std::shared_ptr<Storage::Eeprom> eeprom,
-            QueueHandle_t targetQueue,
             QueueHandle_t dataQueue,
+            QueueHandle_t targetQueue,
             QueueHandle_t settingsQueue);
     void run() override;
 
@@ -40,8 +40,8 @@ class Manager : public BaseTask
     std::shared_ptr<::Network::Client> m_TlsClient;
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
     Timer::CounterTimeout m_ReportTimeout;
-    QueueHandle_t m_TargetQueue;
     QueueHandle_t m_DataQueue;
+    QueueHandle_t m_TargetQueue;
     QueueHandle_t m_SettingsQueue;
     bool m_Connected = false;
     int connect();

@@ -18,9 +18,9 @@ namespace Co2
 class Controller : public BaseTask
 {
   public:
-    Controller(QueueHandle_t targetQueue,
+    Controller(std::shared_ptr<Storage::Eeprom> eeprom,
                QueueHandle_t dataQueue,
-               std::shared_ptr<Storage::Eeprom> eeprom);
+               QueueHandle_t targetQueue);
     float getTarget();
     void run() override;
 
@@ -30,8 +30,8 @@ class Controller : public BaseTask
     const float m_Co2Max = 1500;
     uint32_t m_Co2Target = 900;
     Sensor::SensorData m_SensorData;
-    QueueHandle_t m_TargetQueue;
     QueueHandle_t m_DataQueue;
+    QueueHandle_t m_TargetQueue;
     std::shared_ptr<Storage::Eeprom> m_Eeprom;
     void setTarget(uint32_t target);
 };

@@ -21,14 +21,14 @@ namespace Network
 {
 
 Manager::Manager(std::shared_ptr<Storage::Eeprom> eeprom,
-                 QueueHandle_t targetQueue,
                  QueueHandle_t dataQueue,
+                 QueueHandle_t targetQueue,
                  QueueHandle_t settingsQueue) :
     BaseTask{"NetworkClient", 1024, this, MED},
     m_Eeprom{eeprom},
     m_ReportTimeout{25000},
-    m_TargetQueue{targetQueue},
     m_DataQueue{dataQueue},
+    m_TargetQueue{targetQueue},
     m_SettingsQueue{settingsQueue}
 {
     update();

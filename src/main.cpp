@@ -37,13 +37,13 @@ int main()
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
     auto uart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600);
     auto modbusClient = std::make_shared<Modbus::Client>(uart);
-    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0); // TODO: eeprom task with queue for saving data?
+    auto eeprom = std::make_shared<Storage::Eeprom>(picoI2c0);
 
     // Create queues
     QueueHandle_t inputQueue = xQueueCreate(3, sizeof(Gpio::inputPin));
-    QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
-    QueueHandle_t settingsQueue = xQueueCreate(2, sizeof(Network::Settings));
     QueueHandle_t dataQueue = xQueueCreate(1, sizeof(Sensor::SensorData));
+    QueueHandle_t targetQueue = xQueueCreate(1, sizeof(uint32_t));
+    QueueHandle_t settingsQueue = xQueueCreate(1, sizeof(Network::Settings));
 
     // TODO: clean up task dependencies, use more queues for task-to-task communication
 
@@ -51,9 +51,9 @@ int main()
     auto gpioInput = new Task::Gpio::Input(inputQueue);
     auto sensorReader = new Task::Sensor::Reader(modbusClient, picoI2c1, dataQueue);
     auto fanController = new Task::Fan::Controller(modbusClient, dataQueue);
-    auto co2Controller = new Task::Co2::Controller(targetQueue, dataQueue, eeprom);
-    auto localUI = new Task::LocalUI::UI(picoI2c1, inputQueue, targetQueue, dataQueue, settingsQueue);
-    auto netManager = new Task::Network::Manager(eeprom, targetQueue, dataQueue, settingsQueue);
+    auto co2Controller = new Task::Co2::Controller(eeprom, dataQueue, targetQueue);
+    auto localUI = new Task::LocalUI::UI(picoI2c1, inputQueue, dataQueue, targetQueue, settingsQueue);
+    auto netManager = new Task::Network::Manager(eeprom, dataQueue, targetQueue, settingsQueue);
 
     // Start scheduler
     vTaskStartScheduler();

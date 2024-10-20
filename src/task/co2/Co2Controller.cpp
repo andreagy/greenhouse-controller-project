@@ -26,12 +26,12 @@ enum taskState
 
 // TODO: handle eeprom elsewhere?
 
-Controller::Controller(QueueHandle_t targetQueue,
+Controller::Controller(std::shared_ptr<Storage::Eeprom> eeprom,
                        QueueHandle_t dataQueue,
-                       std::shared_ptr<Storage::Eeprom> eeprom) :
+                       QueueHandle_t targetQueue) :
     BaseTask{"CO2Controller", 256, this, HIGH},
-    m_TargetQueue{targetQueue},
     m_DataQueue{dataQueue},
+    m_TargetQueue{targetQueue},
     m_Eeprom{eeprom}
 {
     gpio_init(m_ValvePin);
