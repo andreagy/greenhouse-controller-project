@@ -17,27 +17,8 @@
         "command": "ninja"
       }
     },
-    // {
-    //   "label": "Flash (Linux)",
-    //   "type": "process",
-    //   "command": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd",
-    //   "args": [
-    //     "-s",
-    //     "${userHome}/.pico-sdk/openocd/0.12.0+dev/scripts",
-    //     "-f",
-    //     "interface/cmsis-dap.cfg",
-    //     "-f",
-    //     "target/${command:raspberry-pi-pico.getTarget}.cfg",
-    //     "-c",
-    //     "adapter speed 5000; program {${command:cmake.launchTargetPath}} verify reset exit"
-    //   ],
-    //   "problemMatcher": [],
-    //   "windows": {
-    //     "command": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd"
-    //   }
-    // },
     {
-      "label": "Flash (Linux)",
+      "label": "Flash",
       "type": "process",
       "command": "openocd",
       "args": [
@@ -51,42 +32,6 @@
       "problemMatcher": [],
       "windows": {
         "command": "openocd"
-      }
-    },
-    {
-      "label": "Flash (WSL)",
-      "type": "process",
-      "command": "openocd",
-      "args": [
-        "-f",
-        "interface/cmsis-dap.cfg",
-        "-f",
-        "target/rp2040.cfg",
-        "-c",
-        "adapter speed 5000; program ${command:cmake.launchTargetPath} verify reset exit"
-      ],
-      "problemMatcher": [],
-      "windows": {
-        "command": "openocd"
-      }
-    },
-    {
-      "label": "Flash (Windows)",
-      "type": "process",
-      "command": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
-      "args": [
-        "-s",
-        "${userHome}/.pico-sdk/openocd/0.12.0+dev/scripts",
-        "-f",
-        "interface/cmsis-dap.cfg",
-        "-f",
-        "target/${command:raspberry-pi-pico.getTarget}.cfg",
-        "-c",
-        "adapter speed 5000; program {${command:cmake.launchTargetPath}} verify reset exit"
-      ],
-      "problemMatcher": [],
-      "windows": {
-        "command": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe"
       }
     }
   ]

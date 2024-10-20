@@ -19,6 +19,9 @@
       "C": "arm-none-eabi-gcc",
       "CXX": "arm-none-eabi-g++"
     },
-    "toolchainFile": "${userHome}/.pico-sdk/cmake/preload/toolchains/pico_arm_cortex_m0plus_gcc.cmake"
+    "toolchainFile": "${userHome}/.pico-sdk/cmake/preload/toolchains/pico_arm_cortex_m0plus_gcc.cmake",
+    "cmakeSettings": {
+      "Python3_EXECUTABLE": "python"
+    }
   }
 ]

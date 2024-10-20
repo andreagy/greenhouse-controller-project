@@ -1,61 +1,70 @@
+# Source files
 add_executable(${PROJECT_NAME}
         main.cpp
-        critical_section.cpp
-        Fmutex.cpp
-        Fmutex.h
-        blinker.cpp
-        blinker.h
-
-        # ipstack/IPStack.cpp
-        # ipstack/IPStack.h
-        ipstack/lwipopts.h
-        ipstack/tls_common.c
-        ipstack/picow_tls_client.c
-        ipstack/lwipopts_tls.h
-
-        i2c/PicoI2C.cpp
-        i2c/PicoI2C.h
-
-        uart/PicoOsUart.cpp
-        uart/PicoOsUart.h
-
-        modbus/nanomodbus.h
-        modbus/nanomodbus.c
-        modbus/ModbusRegister.cpp
-        modbus/ModbusRegister.h
-        modbus/ModbusClient.cpp
-        modbus/ModbusClient.h
 
         display/framebuf.cpp
-        display/framebuf.h
         display/mono_vlsb.cpp
-        display/mono_vlsb.h
-
-        # display/ssd1306.cpp
-        # display/ssd1306.h
-        display/ssd1306os.h
         display/ssd1306os.cpp
+
+        i2c/PicoI2C.cpp
+
+        modbus/MbClient.cpp
+        modbus/Register.cpp
+
+        network/TlsClient.cpp
+
+        semaphore/Binary.cpp
+        semaphore/Mutex.cpp
+
+        sensor/GMP252.cpp
+        sensor/HMP60.cpp
+        sensor/SDP600.cpp
+
+        storage/Eeprom.cpp
+        task/BaseTask.cpp
+        task/co2/Co2Controller.cpp
+        task/fan/FanController.cpp
+        task/gpio/Input.cpp
+        task/localUI/LocalUI.cpp
+        task/network/Manager.cpp
+        task/sensor/Reader.cpp
+
+        timer/CounterTimeout.cpp
+        timer/DelayTimeout.cpp
+
+        uart/PicoOsUart.cpp
+
+        view/SensorView.cpp
+        view/TsSetup.cpp
+        view/WifiSetup.cpp
 )
 
+# Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        modbus
-        uart
-        i2c
-        display
-        ipstack
+        config
 )
 
+# Compile definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-
-        # WIFI_SSID=\"${WIFI_SSID}\"
-        # WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-        WIFI_SSID=\"SmartIotMQTT\"
-        WIFI_PASSWORD=\"SmartIot\"
+        WIFI_SSID=\"$ENV{WIFI_SSID}\"
+        WIFI_PASSWORD=\"$ENV{WIFI_PASSWORD}\"
+        CHANNEL_API_KEY=\"$ENV{CHANNEL_API_KEY}\"
+        TALKBACK_ID=\"$ENV{TALKBACK_ID}\"
+        TALKBACK_API_KEY=\"$ENV{TALKBACK_API_KEY}\"
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND
 )
 
+# Compiler options
+target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wall
+        -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+        -Wno-unused-function # we have some for the docs that aren't called
+        -Wno-maybe-uninitialized
+)
+
+# Linked libraries
 target_link_libraries(${PROJECT_NAME}
         pico_stdlib
         hardware_i2c
