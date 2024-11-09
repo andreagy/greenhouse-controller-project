@@ -11,6 +11,7 @@ This project implements a CO₂ controller system for a greenhouse. The controll
 
 The controller operates based on local and cloud commands:
 - **CO₂ Level Control**: Maintains CO₂ levels within the user-set limits (up to 1500 ppm). Settings are stored in EEPROM for persistence.
+- **CO₂ Target Setting**: User can set target CO2 level from local UI (Raspberry Pi Pico board), or remotely on ThingSpeak.
 - **Safety Feature**: If CO₂ levels exceed 2000 ppm, ventilation automatically increases until the CO₂ level returns to the desired range.
 - **Cloud Connectivity**: Connects to ThingSpeak for reporting data and receiving commands using a RESTful API. Network parameters are configurable on the local UI and stored in EEPROM.
 
